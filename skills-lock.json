@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "framer-motion-animator": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "computedHash": "d0137ba04049bf8926bc80f6a5e2b82d94b5633b6445a85dbfb26ab4f1b104c6"
+    },
+    "generic-react-ux-designer": {
+      "source": "travisjneuman/.claude",
+      "sourceType": "github",
+      "computedHash": "c4b58ba324a9855030825be70f2ca5ff4a69fd0d959eb1732379c465c97c0819"
+    },
+    "tailwind-theme-builder": {
+      "source": "jezweb/claude-skills",
+      "sourceType": "github",
+      "computedHash": "39ef4a7f0fdcf34a983035745fc16604ddd8b37c7671689d3c4a8009fdd302e3"
+    }
+  }
+}
