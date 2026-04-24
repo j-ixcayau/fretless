@@ -282,11 +282,11 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
              </div>
            )}
             <div className={cn(
-              "bg-surface border border-border overflow-x-auto shadow-2xl relative transition-all duration-500",
-              isPlayMode ? "fixed inset-0 z-[60] p-12 md:p-20 flex flex-col items-center justify-center bg-background" : "p-8 rounded-3xl"
+              "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500",
+              isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 flex flex-col items-start md:items-center bg-background" : "p-8 rounded-3xl"
             )}>
               {isPlayMode && (
-                <div className="mb-12 text-center">
+                <div className="mb-12 text-center w-full">
                   <h1 className="text-4xl font-black mb-2 uppercase tracking-tight">{tab.title}</h1>
                   <p className="text-xl text-muted-foreground font-medium">{tab.artist} • <span className="text-primary">{currentKey}</span></p>
                 </div>

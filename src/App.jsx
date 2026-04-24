@@ -17,7 +17,7 @@ function AppContent() {
   const [isEditing, setIsEditing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
   const [importJson, setImportJson] = useState('')
 
