@@ -197,7 +197,7 @@ function AppContent() {
           />
         </div>
         
-        <main className="flex-1 overflow-y-auto relative h-full">
+        <main className="flex-1 relative overflow-hidden flex flex-col">
           <AnimatePresence mode="wait">
             {isEditing ? (
               <motion.div
@@ -205,7 +205,7 @@ function AppContent() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="h-full"
+                className="flex-1 flex flex-col min-h-0"
               >
                 <TabEditor 
                   tab={selectedTab} 
@@ -219,7 +219,7 @@ function AppContent() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="h-full"
+                className="flex-1 flex flex-col min-h-0"
               >
                 <TabDetail 
                   tab={selectedTab} 

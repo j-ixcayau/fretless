@@ -70,7 +70,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-background relative">
+    <div className="flex flex-col flex-1 bg-background relative">
       {/* Header / Actions */}
       <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3 md:gap-4">
@@ -146,7 +146,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -282,8 +282,8 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
              </div>
            )}
             <div className={cn(
-              "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500",
-              isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 flex flex-col items-start md:items-center bg-background" : "p-8 rounded-3xl"
+              "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col",
+              isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background" : "p-8 rounded-3xl"
             )}>
               {isPlayMode && (
                 <div className="mb-12 text-center w-full">
