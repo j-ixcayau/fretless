@@ -71,3 +71,24 @@ export function transposeTab(content, semitones, preferSharps = true) {
 
   return transposedLines.join('\n');
 }
+/**
+ * Calculates the semitone interval between two notes.
+ * Returns the number of semitones needed to go from 'fromNote' to 'toNote' (0-11).
+ */
+export function getInterval(fromNote, toNote) {
+  if (!fromNote || !toNote) return 0;
+  
+  let fromIndex = NOTES_SHARP.indexOf(fromNote);
+  if (fromIndex === -1) fromIndex = NOTES_FLAT.indexOf(fromNote);
+  
+  let toIndex = NOTES_SHARP.indexOf(toNote);
+  if (toIndex === -1) toIndex = NOTES_FLAT.indexOf(toNote);
+  
+  if (fromIndex === -1 || toIndex === -1) return 0;
+  
+  let diff = toIndex - fromIndex;
+  // We want the shortest path or always positive? 
+  // Let's just return the positive distance 0-11.
+  if (diff < 0) diff += 12;
+  return diff;
+}

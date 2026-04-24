@@ -7,6 +7,7 @@ export default function TabEditor({ tab, onSave, onCancel }) {
     title: '',
     artist: '',
     base_key: 'E',
+    preferred_key: '',
     tuning: 'Standard',
     tags: '',
     content: '',
@@ -177,6 +178,22 @@ b : Bend
                 </select>
               </div>
               <div className="space-y-1">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Preferred Key</label>
+                <select
+                  name="preferred_key"
+                  value={formData.preferred_key || ''}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 appearance-none"
+                >
+                  <option value="">None (Use Base)</option>
+                  {['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'].map(k => (
+                    <option key={k} value={k}>{k}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tuning</label>
                 <input
                   name="tuning"
@@ -186,16 +203,16 @@ b : Bend
                   className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                 />
               </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tags (comma separated)</label>
-              <input
-                name="tags"
-                value={formData.tags}
-                onChange={handleChange}
-                placeholder="rock, simple, beginner..."
-                className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tags (comma separated)</label>
+                <input
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleChange}
+                  placeholder="rock, simple, beginner..."
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                />
+              </div>
             </div>
           </div>
 

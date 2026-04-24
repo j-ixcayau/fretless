@@ -6,7 +6,7 @@ import TabEditor from './components/TabEditor'
 import Auth from './components/Auth'
 import { useTabs } from './hooks/useTabs'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save } from 'lucide-react'
 import { cn } from './lib/utils'
 import { useEffect } from 'react'
 
@@ -18,6 +18,8 @@ function AppContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importJson, setImportJson] = useState('')
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
@@ -88,8 +90,77 @@ function AppContent() {
     }
   }
 
+  const handleImport = async () => {
+    try {
+      const data = JSON.parse(importJson)
+      await addTab(data)
+      showToast('Tab imported successfully')
+      setIsImporting(false)
+      setImportJson('')
+    } catch (error) {
+      showToast('Invalid JSON format', 'error')
+    }
+  }
+
   return (
     <>
+      {/* Import Modal */}
+      <AnimatePresence>
+        {isImporting && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <FileJson className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Import from JSON</h2>
+                    <p className="text-xs text-muted-foreground">Paste the tab JSON structure here</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsImporting(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6">
+                <textarea
+                  value={importJson}
+                  onChange={(e) => setImportJson(e.target.value)}
+                  placeholder='{ "title": "...", "artist": "...", ... }'
+                  className="w-full h-64 p-4 bg-background border border-border rounded-xl font-mono text-sm resize-none focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                />
+              </div>
+              <div className="p-6 bg-muted/50 border-t border-border flex gap-3 justify-end">
+                <button 
+                  onClick={() => setIsImporting(false)}
+                  className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleImport}
+                  disabled={!importJson.trim()}
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  Import Tab
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex h-screen overflow-hidden bg-background">
         {/* Sidebar Drawer */}
         <div 
@@ -115,6 +186,10 @@ function AppContent() {
             }}
             onCreateNew={() => {
               handleCreateNew()
+              setIsSidebarOpen(false)
+            }}
+            onImportJSON={() => {
+              setIsImporting(true)
               setIsSidebarOpen(false)
             }}
             searchQuery={searchQuery}
@@ -154,6 +229,9 @@ function AppContent() {
                   onDelete={() => {
                     deleteTab(selectedTabId)
                     setSelectedTabId(null)
+                  }}
+                  onUpdatePreferredKey={(newKey) => {
+                    handleSave({ preferred_key: newKey })
                   }}
                 />
               </motion.div>

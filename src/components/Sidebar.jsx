@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Search, Plus, LogOut, Music, ChevronRight } from 'lucide-react';
+import { Search, Plus, LogOut, Music, ChevronRight, Code } from 'lucide-react';
 import TabCard from './TabCard';
 import { cn } from '../lib/utils';
 
@@ -10,6 +10,7 @@ export default function Sidebar({
   selectedTabId, 
   onSelectTab, 
   onCreateNew,
+  onImportJSON,
   searchQuery,
   onSearchChange
 }) {
@@ -50,12 +51,22 @@ export default function Sidebar({
       <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-2">
         <div className="flex items-center justify-between px-2 mb-2">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Your Collection</span>
-          <button 
-            onClick={onCreateNew}
-            className="p-1 hover:bg-primary/10 rounded text-primary transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={onImportJSON}
+              className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group"
+              title="Import from JSON"
+            >
+              <Code className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={onCreateNew}
+              className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all"
+              title="Create New Tab"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {loading ? (
