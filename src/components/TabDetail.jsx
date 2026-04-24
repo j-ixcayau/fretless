@@ -1,16 +1,21 @@
 import React, { useState, useMemo } from 'react';
-import { Edit3, Trash2, ArrowLeft, ChevronLeft, ChevronRight, Share2, Printer, Music } from 'lucide-react';
-import { transposeTab } from '../lib/transposer';
+import { Edit3, Trash2, ArrowLeft, ChevronLeft, ChevronRight, Music, RotateCcw, Menu } from 'lucide-react';
+import { transposeTab, transposeChord } from '../lib/transposer';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function TabDetail({ tab, onEdit, onDelete }) {
+export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu }) {
   const [transpose, setTranspose] = useState(0);
   const [preferSharps, setPreferSharps] = useState(true);
 
   const transposedContent = useMemo(() => {
     return transposeTab(tab.content, transpose, preferSharps);
   }, [tab.content, transpose, preferSharps]);
+
+  const currentKey = useMemo(() => {
+    if (!tab.base_key) return null;
+    return transposeChord(tab.base_key, transpose, preferSharps);
+  }, [tab.base_key, transpose, preferSharps]);
 
   const handleTranspose = (delta) => {
     setTranspose(prev => {
@@ -25,14 +30,29 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
   return (
     <div className="flex flex-col h-full bg-background relative">
       {/* Header / Actions */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-3 md:gap-4">
+          <button 
+            onClick={onMenu}
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            title="Show sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={onBack}
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            title="Back to list"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <button 
             onClick={onEdit}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             <Edit3 className="w-4 h-4" />
-            <span>Edit Tab</span>
+            <span className="hidden sm:inline">Edit Tab</span>
+            <span className="sm:hidden">Edit</span>
           </button>
           <div className="h-6 w-px bg-border" />
           <button 
@@ -45,19 +65,6 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
             title="Delete Tab"
           >
             <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted" title="Share">
-            <Share2 className="w-5 h-5" />
-          </button>
-          <button 
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted" 
-            title="Print"
-            onClick={() => window.print()}
-          >
-            <Printer className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -77,14 +84,19 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
             <p className="text-2xl text-muted-foreground font-medium">{tab.artist || 'Unknown Artist'}</p>
           </div>
 
-          <div className="flex flex-col items-end gap-4">
-             <div className="flex items-center gap-6 p-4 bg-surface rounded-2xl border border-border shadow-inner">
-               <div className="text-center">
+          <div className="flex flex-col items-start md:items-end gap-4">
+             <div className="flex items-center gap-4 md:gap-6 p-4 bg-surface rounded-2xl border border-border shadow-inner w-full md:w-auto">
+               <div className="text-center flex-1 md:flex-none">
                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Base Key</p>
-                 <p className="text-2xl font-black text-primary">{tab.base_key}</p>
+                 <p className="text-2xl font-black text-muted-foreground/50">{tab.base_key}</p>
                </div>
                <div className="w-px h-10 bg-border" />
-               <div className="text-center">
+               <div className="text-center flex-1 md:flex-none">
+                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Current Key</p>
+                 <p className="text-2xl font-black text-primary">{currentKey}</p>
+               </div>
+               <div className="w-px h-10 bg-border" />
+               <div className="text-center flex-1 md:flex-none">
                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Tuning</p>
                  <p className="text-xl font-bold">{tab.tuning}</p>
                </div>
@@ -93,8 +105,8 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
         </div>
 
         {/* Transposition Controls */}
-        <div className="mb-8 p-6 bg-surface/50 rounded-2xl border border-border flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col items-center md:items-start">
+        <div className="mb-8 p-6 bg-surface/50 rounded-2xl border border-border grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          <div className="flex flex-col items-center md:items-start order-2 md:order-1">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Transposition</h3>
             <div className="flex items-center gap-4">
               <button 
@@ -125,7 +137,23 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
             </div>
           </div>
 
-          <div className="flex flex-col items-center md:items-end">
+          <div className="flex flex-col items-center order-1 md:order-2">
+            <button 
+              onClick={() => setTranspose(0)}
+              disabled={transpose === 0}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                transpose === 0 
+                  ? "opacity-30 border-transparent text-muted-foreground cursor-not-allowed" 
+                  : "border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+              )}
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset to Original
+            </button>
+          </div>
+
+          <div className="flex flex-col items-center md:items-end order-3">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Notation</h3>
             <div className="flex bg-background p-1 rounded-xl border border-border">
               <button 
@@ -148,13 +176,6 @@ export default function TabDetail({ tab, onEdit, onDelete }) {
               </button>
             </div>
           </div>
-
-          <button 
-            onClick={() => setTranspose(0)}
-            className="text-xs font-bold text-primary hover:underline"
-          >
-            Reset to Original
-          </button>
         </div>
 
         {/* Tab Content */}

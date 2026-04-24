@@ -6,7 +6,7 @@ import TabEditor from './components/TabEditor'
 import Auth from './components/Auth'
 import { useTabs } from './hooks/useTabs'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu } from 'lucide-react'
 import { cn } from './lib/utils'
 import { useEffect } from 'react'
 
@@ -17,6 +17,7 @@ function AppContent() {
   const [isEditing, setIsEditing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
@@ -89,10 +90,19 @@ function AppContent() {
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden bg-background flex-col md:flex-row">
+      <div className="flex h-screen overflow-hidden bg-background">
+        {/* Sidebar Drawer */}
+        <div 
+          className={cn(
+            "fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300",
+            isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+        
         <div className={cn(
-          "fixed inset-0 z-30 md:relative md:inset-auto md:block transition-transform duration-300 ease-in-out",
-          selectedTabId && !isEditing ? "translate-x-full md:translate-x-0" : "translate-x-0"
+          "fixed lg:relative inset-y-0 left-0 z-50 w-80 bg-background border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}>
           <Sidebar 
             tabs={filteredTabs}
@@ -101,23 +111,18 @@ function AppContent() {
             onSelectTab={(id) => {
               setSelectedTabId(id)
               setIsEditing(false)
+              setIsSidebarOpen(false) // Close on selection
             }}
-            onCreateNew={handleCreateNew}
+            onCreateNew={() => {
+              handleCreateNew()
+              setIsSidebarOpen(false)
+            }}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
         </div>
         
         <main className="flex-1 overflow-y-auto relative h-full">
-          {/* Mobile Back Button */}
-          {selectedTabId && !isEditing && (
-            <button 
-              onClick={() => setSelectedTabId(null)}
-              className="md:hidden absolute top-4 left-4 z-20 p-2 bg-surface border border-border rounded-lg"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
           <AnimatePresence mode="wait">
             {isEditing ? (
               <motion.div
@@ -144,6 +149,8 @@ function AppContent() {
                 <TabDetail 
                   tab={selectedTab} 
                   onEdit={() => setIsEditing(true)}
+                  onBack={() => setSelectedTabId(null)}
+                  onMenu={() => setIsSidebarOpen(true)}
                   onDelete={() => {
                     deleteTab(selectedTabId)
                     setSelectedTabId(null)
@@ -155,8 +162,14 @@ function AppContent() {
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center h-full text-muted-foreground p-8"
+                className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 relative"
               >
+                <button 
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="lg:hidden absolute top-4 left-4 p-2 bg-surface border border-border rounded-lg text-foreground"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
                 <div className="w-16 h-16 mb-4 rounded-full bg-surface border border-border flex items-center justify-center">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
