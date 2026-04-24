@@ -53,8 +53,10 @@ export function transposeTab(content, semitones, preferSharps = true) {
     // Check if the line looks like it contains chords (e.g. "Am   G   F")
     // A chord line usually doesn't have many numbers and contains note-like characters.
     // This is a heuristic.
-    const chordRegex = /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?\b/g;
+    const chordRegex = /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
     if (chordRegex.test(line)) {
+      // Reset lastIndex because .test() on a global regex advances it
+      chordRegex.lastIndex = 0;
       return line.replace(chordRegex, (match) => {
         return transposeChord(match, semitones, preferSharps);
       });
