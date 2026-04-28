@@ -93,12 +93,47 @@ function AppContent() {
   const handleImport = async () => {
     try {
       const data = JSON.parse(importJson)
-      await addTab(data)
-      showToast('Tab imported successfully')
+      if (Array.isArray(data)) {
+        for (const tab of data) {
+          const { id, ...tabData } = tab
+          await addTab(tabData)
+        }
+        showToast(`${data.length} tabs imported successfully`)
+      } else {
+        const { id, ...tabData } = data
+        await addTab(tabData)
+        showToast('Tab imported successfully')
+      }
       setIsImporting(false)
       setImportJson('')
     } catch (error) {
       showToast('Invalid JSON format', 'error')
+    }
+  }
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (evt) => setImportJson(evt.target.result)
+    reader.readAsText(file)
+  }
+
+  const handleExportAll = () => {
+    try {
+      const dataStr = JSON.stringify(tabs, null, 2)
+      const dataBlob = new Blob([dataStr], { type: 'application/json' })
+      const url = URL.createObjectURL(dataBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `bass-tabs-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      showToast('Export successful')
+    } catch (error) {
+      showToast('Export failed', 'error')
     }
   }
 
@@ -141,20 +176,37 @@ function AppContent() {
                   className="w-full h-64 p-4 bg-background border border-border rounded-xl font-mono text-sm resize-none focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
                 />
               </div>
-              <div className="p-6 bg-muted/50 border-t border-border flex gap-3 justify-end">
-                <button 
-                  onClick={() => setIsImporting(false)}
-                  className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleImport}
-                  disabled={!importJson.trim()}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-                >
-                  Import Tab
-                </button>
+              <div className="p-6 bg-muted/50 border-t border-border flex gap-3 justify-between items-center">
+                <div>
+                  <input
+                    type="file"
+                    accept=".json"
+                    id="json-upload"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                  <label 
+                    htmlFor="json-upload"
+                    className="px-4 py-2 text-sm font-bold border border-border hover:bg-muted rounded-lg cursor-pointer transition-colors"
+                  >
+                    Upload .json File
+                  </label>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setIsImporting(false)}
+                    className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleImport}
+                    disabled={!importJson.trim()}
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                  >
+                    Import
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -190,6 +242,10 @@ function AppContent() {
             }}
             onImportJSON={() => {
               setIsImporting(true)
+              setIsSidebarOpen(false)
+            }}
+            onExportAll={() => {
+              handleExportAll()
               setIsSidebarOpen(false)
             }}
             searchQuery={searchQuery}

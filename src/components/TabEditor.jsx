@@ -11,6 +11,7 @@ export default function TabEditor({ tab, onSave, onCancel }) {
     preferred_key: '',
     tuning: 'Standard',
     tags: '',
+    duration: '',
     content: '',
     ...tab
   });
@@ -193,7 +194,7 @@ b : Bend
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tuning</label>
                 <input
@@ -205,12 +206,23 @@ b : Bend
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tags (comma separated)</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Duration (s)</label>
+                <input
+                  name="duration"
+                  type="number"
+                  value={formData.duration || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. 180"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tags</label>
                 <input
                   name="tags"
                   value={formData.tags}
                   onChange={handleChange}
-                  placeholder="rock, simple, beginner..."
+                  placeholder="rock, simple..."
                   className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                 />
               </div>

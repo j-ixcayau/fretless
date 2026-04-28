@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Search, Plus, LogOut, Music, ChevronRight, Code } from 'lucide-react';
+import { Search, Plus, LogOut, Music, ChevronRight, Code, Download } from 'lucide-react';
 import TabCard from './TabCard';
 import { cn } from '../lib/utils';
 
@@ -11,6 +11,7 @@ export default function Sidebar({
   onSelectTab, 
   onCreateNew,
   onImportJSON,
+  onExportAll,
   searchQuery,
   onSearchChange
 }) {
@@ -58,6 +59,13 @@ export default function Sidebar({
               title="Import from JSON"
             >
               <Code className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={onExportAll}
+              className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all"
+              title="Export all tabs to JSON"
+            >
+              <Download className="w-4 h-4" />
             </button>
             <button 
               onClick={onCreateNew}

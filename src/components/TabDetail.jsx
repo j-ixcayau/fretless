@@ -9,6 +9,38 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
   const [preferSharps, setPreferSharps] = useState(true);
   const [isPlayMode, setIsPlayMode] = useState(false);
   const [fontSize, setFontSize] = useState(16);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const scrollRef = React.useRef(null);
+
+  // Inactivity timer for Play Mode controls
+  React.useEffect(() => {
+    let timeoutId;
+    if (isPlayMode) {
+      const resetTimer = () => {
+        setShowControls(true);
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => setShowControls(false), 3000);
+      };
+
+      resetTimer();
+
+      window.addEventListener('mousemove', resetTimer);
+      window.addEventListener('touchstart', resetTimer);
+      window.addEventListener('keydown', resetTimer);
+      window.addEventListener('click', resetTimer);
+
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener('mousemove', resetTimer);
+        window.removeEventListener('touchstart', resetTimer);
+        window.removeEventListener('keydown', resetTimer);
+        window.removeEventListener('click', resetTimer);
+      };
+    } else {
+      setShowControls(true);
+    }
+  }, [isPlayMode]);
 
   // Auto-transpose to preferred key on load
   React.useEffect(() => {
@@ -49,11 +81,13 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
         });
       }
       setIsPlayMode(true);
+      setIsAutoScrolling(false);
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
       }
       setIsPlayMode(false);
+      setIsAutoScrolling(false);
     }
   };
 
@@ -62,12 +96,74 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsPlayMode(false);
+        setIsAutoScrolling(false);
       }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Auto-scroll logic
+  React.useEffect(() => {
+    let animationFrameId;
+    const scrollableNode = scrollRef.current;
+
+    const handleUserInteraction = () => {
+      if (isAutoScrolling) {
+        setIsAutoScrolling(false);
+        setShowControls(true);
+      }
+    };
+
+    if (scrollableNode) {
+      scrollableNode.addEventListener('wheel', handleUserInteraction, { passive: true });
+      scrollableNode.addEventListener('touchstart', handleUserInteraction, { passive: true });
+      scrollableNode.addEventListener('mousedown', handleUserInteraction, { passive: true });
+    }
+
+    if (isPlayMode && isAutoScrolling && tab.duration) {
+      if (!scrollableNode) return;
+
+      const durationMs = parseInt(tab.duration, 10) * 1000;
+      if (isNaN(durationMs) || durationMs <= 0) return;
+
+      const maxScroll = scrollableNode.scrollHeight - scrollableNode.clientHeight;
+      if (maxScroll <= 0) return;
+
+      let lastTime = null;
+      let exactScrollTop = scrollableNode.scrollTop;
+
+      const step = (timestamp) => {
+        if (!lastTime) lastTime = timestamp;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        const speed = maxScroll / durationMs;
+        exactScrollTop += speed * delta;
+        scrollableNode.scrollTop = exactScrollTop;
+
+        // Stop if we hit the bottom
+        if (Math.ceil(scrollableNode.scrollTop) >= maxScroll) {
+          setIsAutoScrolling(false);
+          setShowControls(true);
+        } else {
+          animationFrameId = requestAnimationFrame(step);
+        }
+      };
+
+      animationFrameId = requestAnimationFrame(step);
+    }
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (scrollableNode) {
+        scrollableNode.removeEventListener('wheel', handleUserInteraction);
+        scrollableNode.removeEventListener('touchstart', handleUserInteraction);
+        scrollableNode.removeEventListener('mousedown', handleUserInteraction);
+      }
+    };
+  }, [isPlayMode, isAutoScrolling, tab.duration]);
 
   return (
     <div className="flex flex-col flex-1 bg-background relative">
@@ -122,13 +218,29 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
 
       {/* Play Mode Overlay Controls */}
       <AnimatePresence>
-        {isPlayMode && (
+        {isPlayMode && showControls && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-6 right-6 z-[100] flex items-center gap-3 p-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl"
           >
+            {tab.duration && (
+              <>
+                <button 
+                  onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                    isAutoScrolling 
+                      ? "bg-primary text-black border-primary" 
+                      : "bg-surface text-primary border-primary/30 hover:bg-primary/10"
+                  )}
+                >
+                  {isAutoScrolling ? 'Pause Scroll' : 'Auto-Scroll'}
+                </button>
+                <div className="w-px h-6 bg-border" />
+              </>
+            )}
             <div className="flex items-center gap-2 px-3 py-2 bg-background/50 rounded-xl border border-border">
               <button onClick={() => setFontSize(s => Math.max(10, s - 2))} className="p-1 hover:text-primary">-</button>
               <span className="text-[10px] font-black w-8 text-center">{fontSize}px</span>
@@ -281,7 +393,9 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
                BASS TAB
              </div>
            )}
-            <div className={cn(
+            <div 
+              ref={scrollRef}
+              className={cn(
               "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col",
               isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background" : "p-8 rounded-3xl"
             )}>
