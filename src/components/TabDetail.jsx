@@ -125,7 +125,8 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
     if (isPlayMode && isAutoScrolling && tab.duration) {
       if (!scrollableNode) return;
 
-      const durationMs = parseInt(tab.duration, 10) * 1000;
+      // Decrease auto scroll duration by 20% to make the scroll faster
+      const durationMs = parseInt(tab.duration, 10) * 1000 * 0.8;
       if (isNaN(durationMs) || durationMs <= 0) return;
 
       const maxScroll = scrollableNode.scrollHeight - scrollableNode.clientHeight;
@@ -146,7 +147,6 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
         // Stop if we hit the bottom
         if (Math.ceil(scrollableNode.scrollTop) >= maxScroll) {
           setIsAutoScrolling(false);
-          setShowControls(true);
         } else {
           animationFrameId = requestAnimationFrame(step);
         }

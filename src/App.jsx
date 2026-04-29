@@ -5,6 +5,8 @@ import TabDetail from './components/TabDetail'
 import TabEditor from './components/TabEditor'
 import Auth from './components/Auth'
 import { useTabs } from './hooks/useTabs'
+import { useSetlists } from './hooks/useSetlists'
+import SetlistDetail from './components/SetlistDetail'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save } from 'lucide-react'
 import { cn } from './lib/utils'
@@ -13,7 +15,10 @@ import { useEffect } from 'react'
 function AppContent() {
   const { user, loading: authLoading } = useAuth()
   const { tabs, loading: tabsLoading, addTab, updateTab, deleteTab } = useTabs()
+  const { setlists, loading: setlistsLoading, addSetlist, updateSetlist, deleteSetlist } = useSetlists()
   const [selectedTabId, setSelectedTabId] = useState(null)
+  const [selectedSetlistId, setSelectedSetlistId] = useState(null)
+  const [activeView, setActiveView] = useState('tabs') // 'tabs' or 'setlists'
   const [isEditing, setIsEditing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [toast, setToast] = useState(null)
@@ -59,6 +64,7 @@ function AppContent() {
   }
 
   const selectedTab = tabs.find(t => t.id === selectedTabId)
+  const selectedSetlist = setlists.find(s => s.id === selectedSetlistId)
 
   const filteredTabs = tabs.filter(tab => {
     const search = searchQuery.toLowerCase()
@@ -71,7 +77,22 @@ function AppContent() {
 
   const handleCreateNew = () => {
     setSelectedTabId(null)
+    setSelectedSetlistId(null)
+    setActiveView('tabs')
     setIsEditing(true)
+  }
+
+  const handleCreateSetlist = async () => {
+    try {
+      const newSetlist = await addSetlist({ name: 'New Setlist', tabs: [] })
+      if (newSetlist) {
+        setSelectedSetlistId(newSetlist.id)
+        setSelectedTabId(null)
+      }
+      showToast('Setlist created')
+    } catch (error) {
+      showToast('Failed to create setlist', 'error')
+    }
   }
 
   const handleSave = async (tabData) => {
@@ -229,15 +250,30 @@ function AppContent() {
         )}>
           <Sidebar 
             tabs={filteredTabs}
-            loading={tabsLoading}
+            setlists={setlists}
+            loading={tabsLoading || setlistsLoading}
+            activeView={activeView}
+            setActiveView={setActiveView}
             selectedTabId={selectedTabId}
+            selectedSetlistId={selectedSetlistId}
             onSelectTab={(id) => {
               setSelectedTabId(id)
+              setSelectedSetlistId(null)
               setIsEditing(false)
               setIsSidebarOpen(false) // Close on selection
             }}
+            onSelectSetlist={(id) => {
+              setSelectedSetlistId(id)
+              setSelectedTabId(null)
+              setIsEditing(false)
+              setIsSidebarOpen(false)
+            }}
             onCreateNew={() => {
               handleCreateNew()
+              setIsSidebarOpen(false)
+            }}
+            onCreateSetlist={() => {
+              handleCreateSetlist()
               setIsSidebarOpen(false)
             }}
             onImportJSON={() => {
@@ -291,6 +327,34 @@ function AppContent() {
                   }}
                 />
               </motion.div>
+            ) : selectedSetlist ? (
+              <motion.div
+                key="setlist-detail"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <SetlistDetail
+                  setlist={selectedSetlist}
+                  allTabs={tabs}
+                  onUpdate={(updates) => updateSetlist(selectedSetlistId, updates)}
+                  onDelete={() => {
+                    deleteSetlist(selectedSetlistId)
+                    setSelectedSetlistId(null)
+                  }}
+                  onBack={() => setSelectedSetlistId(null)}
+                  onMenu={() => setIsSidebarOpen(true)}
+                  onPlay={(index) => {
+                    // For now, just play the first song by selecting it
+                    const tabId = selectedSetlist.tabs[index];
+                    if (tabId) {
+                      setSelectedTabId(tabId);
+                      setSelectedSetlistId(null);
+                    }
+                  }}
+                />
+              </motion.div>
             ) : (
               <motion.div
                 key="empty"
@@ -309,8 +373,8 @@ function AppContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium text-foreground mb-2">No tab selected</h3>
-                <p className="text-center max-w-xs mb-6">Select a tab from the sidebar or create a new one to start practicing.</p>
+                <h3 className="text-xl font-medium text-foreground mb-2">Nothing selected</h3>
+                <p className="text-center max-w-xs mb-6">Select a tab or setlist from the sidebar or create a new one.</p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button 
                     onClick={() => setIsSidebarOpen(true)}
