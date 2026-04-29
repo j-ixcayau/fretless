@@ -208,10 +208,12 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
                 onDelete();
               }
             }}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+            className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10 font-bold"
             title="Delete Tab"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Delete Tab</span>
+            <span className="sm:hidden">Delete</span>
           </button>
         </div>
       </div>
@@ -223,7 +225,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-[100] flex items-center gap-3 p-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:left-auto md:transform-none md:top-6 md:right-6 z-[100] flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl w-max max-w-[90vw]"
           >
             {tab.duration && (
               <>
@@ -268,12 +270,12 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
                 </span>
               ))}
             </div>
-            <h1 className="text-5xl font-black tracking-tight mb-2 leading-none uppercase">{tab.title || 'Untitled Tab'}</h1>
-            <p className="text-2xl text-muted-foreground font-medium">{tab.artist || 'Unknown Artist'}</p>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 leading-none uppercase">{tab.title || 'Untitled Tab'}</h1>
+            <p className="text-xl md:text-2xl text-muted-foreground font-medium">{tab.artist || 'Unknown Artist'}</p>
           </div>
 
-          <div className="flex flex-col items-start md:items-end gap-4">
-             <div className="flex items-center gap-4 md:gap-6 p-4 bg-surface rounded-2xl border border-border shadow-inner w-full md:w-auto">
+          <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
+             <div className="flex items-center justify-between gap-2 md:gap-6 p-4 bg-surface rounded-2xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
                <div className="text-center flex-1 md:flex-none">
                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Base Key</p>
                  <p className="text-2xl font-black text-muted-foreground/50">{tab.base_key}</p>
@@ -400,9 +402,9 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
               isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background" : "p-8 rounded-3xl"
             )}>
               {isPlayMode && (
-                <div className="mb-12 text-center w-full">
-                  <h1 className="text-4xl font-black mb-2 uppercase tracking-tight">{tab.title}</h1>
-                  <p className="text-xl text-muted-foreground font-medium">{tab.artist} • <span className="text-primary">{currentKey}</span></p>
+                <div className="mb-8 md:mb-12 text-center w-full">
+                  <h1 className="text-2xl md:text-4xl font-black mb-2 uppercase tracking-tight">{tab.title}</h1>
+                  <p className="text-lg md:text-xl text-muted-foreground font-medium">{tab.artist} • <span className="text-primary">{currentKey}</span></p>
                 </div>
               )}
               <pre 

@@ -311,12 +311,20 @@ function AppContent() {
                 </div>
                 <h3 className="text-xl font-medium text-foreground mb-2">No tab selected</h3>
                 <p className="text-center max-w-xs mb-6">Select a tab from the sidebar or create a new one to start practicing.</p>
-                <button 
-                  onClick={handleCreateNew}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Add Your First Tab
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="lg:hidden px-6 py-2 bg-surface border border-border text-foreground rounded-xl font-medium hover:bg-muted transition-colors"
+                  >
+                    Browse Collection
+                  </button>
+                  <button 
+                    onClick={handleCreateNew}
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Add Your First Tab
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

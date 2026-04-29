@@ -38,7 +38,7 @@ export default function Sidebar({
             placeholder="Search by title, artist, tag..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+            className="w-full pl-10 pr-4 py-4 md:py-3 bg-background border border-border rounded-xl text-base md:text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
           />
           {searchQuery && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">
