@@ -24,7 +24,7 @@ export default function Sidebar({
   const { user, logout } = useAuth();
 
   return (
-    <aside className="w-full md:w-80 h-full bg-surface border-r border-border flex flex-col z-20">
+    <aside className="w-full md:w-80 h-full bg-card backdrop-blur-lg border-r border-border flex flex-col z-20">
       {/* Header */}
       <div className="p-6 pb-2">
         <div className="flex items-center gap-3 mb-6">

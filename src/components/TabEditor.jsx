@@ -75,7 +75,7 @@ b : Bend
   `.trim();
 
   return (
-    <div className="flex flex-col flex-1 bg-background">
+    <div className="flex flex-col flex-1 bg-background min-h-0">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-4">

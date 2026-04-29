@@ -25,7 +25,7 @@ export default function SetlistDetail({ setlist, allTabs, onUpdate, onDelete, on
   };
 
   return (
-    <div className="flex flex-col flex-1 bg-background relative h-full overflow-hidden">
+    <div className="flex flex-col flex-1 bg-background relative h-full overflow-hidden min-h-0">
       <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3 md:gap-4 w-full">
           <button 

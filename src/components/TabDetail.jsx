@@ -166,7 +166,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
   }, [isPlayMode, isAutoScrolling, tab.duration]);
 
   return (
-    <div className="flex flex-col flex-1 bg-background relative">
+    <div className="flex flex-col flex-1 bg-background relative min-h-0">
       {/* Header / Actions */}
       <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3 md:gap-4">
@@ -265,7 +265,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
           <div>
             <div className="flex flex-wrap gap-2 mb-4">
               {tab.tags?.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-surface border border-border rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span key={tag} className="px-3 py-1 bg-card backdrop-blur-lg border border-border rounded-full text-[10px] font-display font-black uppercase tracking-widest text-muted-foreground">
                   {tag}
                 </span>
               ))}
@@ -275,15 +275,15 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
           </div>
 
           <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
-             <div className="flex items-center justify-between gap-2 md:gap-6 p-4 bg-surface rounded-2xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
+             <div className="flex items-center justify-between gap-2 md:gap-6 p-4 bg-card backdrop-blur-lg rounded-2xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
                <div className="text-center flex-1 md:flex-none">
-                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Base Key</p>
-                 <p className="text-2xl font-black text-muted-foreground/50">{tab.base_key}</p>
+                 <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-1">Base Key</p>
+                 <p className="text-2xl font-display font-black text-muted-foreground/50">{tab.base_key}</p>
                </div>
                 <div className="w-px h-10 bg-border" />
                 <div className="text-center flex-1 md:flex-none relative group">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Current Key</p>
-                  <p className="text-2xl font-black text-primary">{currentKey}</p>
+                  <p className="text-[10px] font-display font-bold text-primary uppercase tracking-widest mb-1">Current Key</p>
+                  <p className="text-2xl font-display font-black text-primary">{currentKey}</p>
                   
                   {/* Preferred Key Indicator */}
                   {tab.preferred_key === currentKey && (
@@ -292,8 +292,8 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
                 </div>
                 <div className="w-px h-10 bg-border" />
                 <div className="text-center flex-1 md:flex-none">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Tuning</p>
-                  <p className="text-xl font-bold">{tab.tuning}</p>
+                  <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-1">Tuning</p>
+                  <p className="text-xl font-display font-bold">{tab.tuning}</p>
                 </div>
               </div>
               
