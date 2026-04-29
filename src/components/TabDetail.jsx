@@ -186,7 +186,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
           </button>
           <button 
             onClick={onEdit}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
           >
             <Edit3 className="w-4 h-4" />
             <span className="hidden sm:inline">Edit Tab</span>
@@ -195,11 +195,11 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
           <div className="h-6 w-px bg-border" />
           <button 
             onClick={togglePlayMode}
-            className="flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-lg font-bold hover:bg-muted transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-surface/50 backdrop-blur-sm border border-border rounded-xl font-bold hover:bg-surface hover:border-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all group"
           >
-            <Play className="w-4 h-4 text-primary fill-primary/20" />
-            <span className="hidden sm:inline">Play Mode</span>
-            <span className="sm:hidden">Play</span>
+            <Play className="w-4 h-4 text-primary fill-primary/20 group-hover:fill-primary transition-colors" />
+            <span className="hidden sm:inline text-foreground group-hover:text-primary transition-colors">Play Mode</span>
+            <span className="sm:hidden text-foreground group-hover:text-primary transition-colors">Play</span>
           </button>
           <div className="h-6 w-px bg-border" />
           <button 
@@ -300,13 +300,13 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
               <AnimatePresence>
                 {currentKey && currentKey !== (tab.preferred_key || tab.base_key) && (
                   <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => onUpdatePreferredKey(currentKey)}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface border border-primary/30 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/10 transition-all w-full md:w-auto justify-center"
+                    className="flex items-center gap-2 px-4 py-3 bg-primary/10 border border-primary/50 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center shadow-[0_0_15px_rgba(168,85,247,0.15)]"
                   >
-                    <Save className="w-3 h-3" />
+                    <Save className="w-4 h-4" />
                     Save as Preferred Key
                   </motion.button>
                 )}

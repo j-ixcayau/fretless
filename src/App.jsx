@@ -358,37 +358,61 @@ function AppContent() {
             ) : (
               <motion.div
                 key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 relative"
               >
                 <button 
                   onClick={() => setIsSidebarOpen(true)}
-                  className="lg:hidden absolute top-4 left-4 p-2 bg-surface border border-border rounded-lg text-foreground"
+                  className="lg:hidden absolute top-4 left-4 p-2 bg-surface/50 backdrop-blur-md border border-border rounded-xl text-foreground hover:bg-surface/80 hover:border-primary/50 transition-all shadow-lg"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="w-16 h-16 mb-4 rounded-full bg-surface border border-border flex items-center justify-center">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="w-24 h-24 mb-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.15)]"
+                >
+                  <svg className="w-12 h-12 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                   </svg>
-                </div>
-                <h3 className="text-xl font-medium text-foreground mb-2">Nothing selected</h3>
-                <p className="text-center max-w-xs mb-6">Select a tab or setlist from the sidebar or create a new one.</p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                </motion.div>
+                <motion.h3 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl font-black text-foreground mb-3 tracking-tight"
+                >
+                  Nothing selected
+                </motion.h3>
+                <motion.p 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center max-w-sm mb-8 text-lg"
+                >
+                  Select a tab or setlist from the sidebar or create a new one to get started.
+                </motion.p>
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex flex-col sm:flex-row gap-4 w-full max-w-md px-4 sm:px-0"
+                >
                   <button 
                     onClick={() => setIsSidebarOpen(true)}
-                    className="lg:hidden px-6 py-2 bg-surface border border-border text-foreground rounded-xl font-medium hover:bg-muted transition-colors"
+                    className="lg:hidden w-full sm:flex-1 px-6 py-4 bg-surface/30 backdrop-blur-sm border border-border text-foreground rounded-xl font-bold hover:bg-surface/50 hover:border-primary/50 transition-all text-center group"
                   >
-                    Browse Collection
+                    <span className="group-hover:text-primary transition-colors">Browse Collection</span>
                   </button>
                   <button 
                     onClick={handleCreateNew}
-                    className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                    className="w-full sm:flex-1 px-6 py-4 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] text-center"
                   >
-                    Add Your First Tab
+                    Add First Tab
                   </button>
-                </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>

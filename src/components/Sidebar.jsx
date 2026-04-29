@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Search, Plus, LogOut, Music, ChevronRight, Code, Download, ListMusic, FileText } from 'lucide-react';
 import TabCard from './TabCard';
 import { cn } from '../lib/utils';
+import { motion } from 'framer-motion';
 
 export default function Sidebar({ 
   tabs, 
@@ -153,18 +154,20 @@ export default function Sidebar({
             </div>
           ) : (
             setlists?.map(setlist => (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 key={setlist.id}
                 onClick={() => onSelectSetlist(setlist.id)}
                 className={cn(
-                  "w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center justify-between",
+                  "w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center justify-between relative overflow-hidden backdrop-blur-sm",
                   selectedSetlistId === setlist.id
-                    ? "bg-primary/10 border-primary/50"
-                    : "bg-surface border-border hover:border-primary/50 hover:bg-surface/80"
+                    ? "bg-primary/10 border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+                    : "bg-surface/30 border-border hover:border-primary/50 hover:bg-surface/60"
                 )}
               >
                 <div>
-                  <h3 className={cn("font-bold truncate", selectedSetlistId === setlist.id ? "text-primary" : "text-foreground")}>
+                  <h3 className={cn("font-bold truncate text-lg transition-colors", selectedSetlistId === setlist.id ? "text-primary" : "text-foreground group-hover:text-primary")}>
                     {setlist.name || 'Untitled Setlist'}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -175,7 +178,13 @@ export default function Sidebar({
                   "w-5 h-5 transition-transform duration-300",
                   selectedSetlistId === setlist.id ? "text-primary translate-x-1" : "text-muted-foreground group-hover:text-primary group-hover:translate-x-1"
                 )} />
-              </button>
+                {selectedSetlistId === setlist.id && (
+                  <motion.div 
+                    layoutId="activeSetlistIndicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(168,85,247,0.8)]" 
+                  />
+                )}
+              </motion.button>
             ))
           )
         )}

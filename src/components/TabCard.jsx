@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '../lib/utils';
+import { motion } from 'framer-motion';
 
 export default function TabCard({ tab, isActive, onClick }) {
   // Key color family logic
@@ -16,13 +17,15 @@ export default function TabCard({ tab, isActive, onClick }) {
   const firstLine = tab.content?.split('\n').find(l => l.includes('|')) || '';
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        "w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden",
+        "w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden backdrop-blur-sm",
         isActive 
-          ? "bg-surface border-primary shadow-lg shadow-primary/5" 
-          : "bg-transparent border-transparent hover:bg-surface/50 hover:border-border"
+          ? "bg-primary/10 border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]" 
+          : "bg-surface/30 border-border hover:bg-surface/60 hover:border-primary/50"
       )}
     >
       <div className="flex justify-between items-start mb-2">
@@ -52,8 +55,11 @@ export default function TabCard({ tab, isActive, onClick }) {
       </div>
 
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full" />
+        <motion.div 
+          layoutId="activeTabIndicator"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(168,85,247,0.8)]" 
+        />
       )}
-    </button>
+    </motion.button>
   );
 }
