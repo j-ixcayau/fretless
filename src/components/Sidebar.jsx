@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Search, Plus, LogOut, Music, ChevronRight, Code, Download, ListMusic, FileText } from 'lucide-react';
+import { Search, Plus, LogOut, Music, ChevronRight, Code, Download, ListMusic, FileText, Wand2 } from 'lucide-react';
 import TabCard from './TabCard';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
@@ -18,6 +18,7 @@ export default function Sidebar({
   onCreateNew,
   onCreateSetlist,
   onImportJSON,
+  onSmartImport,
   onExportAll,
   searchQuery,
   onSearchChange
@@ -85,6 +86,13 @@ export default function Sidebar({
           <div className="flex items-center gap-1">
             {activeView === 'tabs' ? (
               <>
+                <button 
+                  onClick={onSmartImport}
+                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group"
+                  title="Smart Import"
+                >
+                  <Wand2 className="w-4 h-4" />
+                </button>
                 <button 
                   onClick={onImportJSON}
                   className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group"

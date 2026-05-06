@@ -8,7 +8,8 @@ import { useTabs } from './hooks/useTabs'
 import { useSetlists } from './hooks/useSetlists'
 import SetlistDetail from './components/SetlistDetail'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save, Wand2, ImagePlus, Loader2 } from 'lucide-react'
+import { analyzeSong } from './lib/gemini'
 import { cn } from './lib/utils'
 import { useEffect } from 'react'
 
@@ -25,6 +26,10 @@ function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isImporting, setIsImporting] = useState(false)
   const [importJson, setImportJson] = useState('')
+  const [isSmartImporting, setIsSmartImporting] = useState(false)
+  const [smartImportText, setSmartImportText] = useState('')
+  const [smartImportFile, setSmartImportFile] = useState(null)
+  const [isSmartImportLoading, setIsSmartImportLoading] = useState(false)
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
@@ -158,6 +163,33 @@ function AppContent() {
     }
   }
 
+  const executeSmartImport = async () => {
+    if (!smartImportText.trim() && !smartImportFile) return;
+    setIsSmartImportLoading(true);
+    try {
+      const tabData = await analyzeSong(smartImportText, smartImportFile);
+      const newTab = await addTab(tabData);
+      showToast('Song imported successfully!');
+      if (newTab) setSelectedTabId(newTab.id);
+      setIsSmartImporting(false);
+      setSmartImportText('');
+      setSmartImportFile(null);
+      setIsEditing(false);
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'Failed to analyze song', 'error');
+    } finally {
+      setIsSmartImportLoading(false);
+    }
+  }
+
+  const handleSmartFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSmartImportFile(file);
+    }
+  }
+
   return (
     <>
       {/* Import Modal */}
@@ -234,6 +266,117 @@ function AppContent() {
         )}
       </AnimatePresence>
 
+      {/* Smart Import Modal */}
+      <AnimatePresence>
+        {isSmartImporting && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Wand2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Smart Import</h2>
+                    <p className="text-xs text-muted-foreground">AI-powered song tab extraction</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsSmartImporting(false)} disabled={isSmartImportLoading} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-4">
+                <p className="text-sm text-muted-foreground">
+                  Paste a URL, song lyrics, or chords. You can also upload a screenshot or photo of a tab, and our AI will automatically format it for you.
+                </p>
+                <textarea
+                  value={smartImportText}
+                  onChange={(e) => setSmartImportText(e.target.value)}
+                  placeholder="Paste URL or text here..."
+                  className="w-full h-32 p-4 bg-background border border-border rounded-xl text-sm resize-none focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                  disabled={isSmartImportLoading}
+                />
+                
+                <div className="flex items-center gap-4">
+                  <div className="h-px bg-border flex-1" />
+                  <span className="text-xs font-bold text-muted-foreground uppercase">OR</span>
+                  <div className="h-px bg-border flex-1" />
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="smart-image-upload"
+                    className="hidden"
+                    onChange={handleSmartFileChange}
+                    disabled={isSmartImportLoading}
+                  />
+                  <label 
+                    htmlFor="smart-image-upload"
+                    className={cn(
+                      "flex items-center justify-center gap-2 w-full p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors",
+                      smartImportFile ? "border-primary/50 bg-primary/5" : "border-border hover:bg-muted/50 hover:border-primary/30",
+                      isSmartImportLoading && "opacity-50 cursor-not-allowed pointer-events-none"
+                    )}
+                  >
+                    <ImagePlus className={cn("w-5 h-5", smartImportFile ? "text-primary" : "text-muted-foreground")} />
+                    <span className="text-sm font-bold">
+                      {smartImportFile ? smartImportFile.name : "Upload Image or Screenshot"}
+                    </span>
+                  </label>
+                  {smartImportFile && (
+                    <button 
+                      onClick={(e) => { e.preventDefault(); setSmartImportFile(null); }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-surface rounded-md text-muted-foreground transition-colors"
+                      disabled={isSmartImportLoading}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="p-6 bg-muted/50 border-t border-border flex justify-end gap-3 items-center">
+                <button 
+                  onClick={() => setIsSmartImporting(false)}
+                  disabled={isSmartImportLoading}
+                  className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={executeSmartImport}
+                  disabled={(!smartImportText.trim() && !smartImportFile) || isSmartImportLoading}
+                  className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  {isSmartImportLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Import Song
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex h-screen overflow-hidden bg-background">
         {/* Sidebar Drawer */}
         <div 
@@ -278,6 +421,10 @@ function AppContent() {
             }}
             onImportJSON={() => {
               setIsImporting(true)
+              setIsSidebarOpen(false)
+            }}
+            onSmartImport={() => {
+              setIsSmartImporting(true)
               setIsSidebarOpen(false)
             }}
             onExportAll={() => {
