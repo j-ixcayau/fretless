@@ -29,6 +29,7 @@ More lyrics here...
 - Support both English (\`[Chorus]\`) and Spanish (\`[Estribillo]\`) section headers based on the input.
 - Prefer Sentence Case (e.g., "Lyrics go here") over ALL CAPS.
 - \`duration\`: Integer in seconds. Estimate from the song length if not explicitly known.
+- CRITICAL: You MUST use explicit newline characters (\`\\n\`) to format the \`content\` field properly. Never squash the lyrics and chords into a single line. Every chord line must be above the lyric line, separated by \`\\n\`. Every section header must be on its own line, followed by \`\\n\`.
 `;
 
 const responseSchema = {
