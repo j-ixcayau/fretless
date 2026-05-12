@@ -8,7 +8,7 @@ import { useTabs } from './hooks/useTabs'
 import { useSetlists } from './hooks/useSetlists'
 import SetlistDetail from './components/SetlistDetail'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save, Wand2, ImagePlus, Loader2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertCircle, X, Menu, FileJson, Save, Wand2, ImagePlus, Loader2, Settings } from 'lucide-react'
 import { analyzeSong } from './lib/gemini'
 import { cn } from './lib/utils'
 import { useEffect } from 'react'
@@ -30,6 +30,8 @@ function AppContent() {
   const [smartImportText, setSmartImportText] = useState('')
   const [smartImportFile, setSmartImportFile] = useState(null)
   const [isSmartImportLoading, setIsSmartImportLoading] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('geminiApiKey') || '')
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
@@ -188,6 +190,12 @@ function AppContent() {
     if (file) {
       setSmartImportFile(file);
     }
+  }
+
+  const handleSaveSettings = () => {
+    localStorage.setItem('geminiApiKey', geminiApiKey.trim());
+    setIsSettingsOpen(false);
+    showToast('Settings saved successfully');
   }
 
   return (
@@ -377,6 +385,73 @@ function AppContent() {
         )}
       </AnimatePresence>
 
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Settings className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Settings</h2>
+                    <p className="text-xs text-muted-foreground">App configuration & API keys</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 flex-1 flex flex-col gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Gemini API Key</label>
+                  <p className="text-xs text-muted-foreground">
+                    Required for the Smart Import feature. Your key is stored securely in your browser's local storage and is only used to communicate with the Google Gemini API.
+                  </p>
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="w-full p-4 bg-background border border-border rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-mono"
+                  />
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline font-bold inline-block mt-2">
+                    Get a free API key from Google AI Studio &rarr;
+                  </a>
+                </div>
+              </div>
+              <div className="p-6 bg-muted/50 border-t border-border flex justify-end gap-3 items-center">
+                <button 
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Settings
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex h-screen overflow-hidden bg-background">
         {/* Sidebar Drawer */}
         <div 
@@ -425,6 +500,10 @@ function AppContent() {
             }}
             onSmartImport={() => {
               setIsSmartImporting(true)
+              setIsSidebarOpen(false)
+            }}
+            onOpenSettings={() => {
+              setIsSettingsOpen(true)
               setIsSidebarOpen(false)
             }}
             onExportAll={() => {

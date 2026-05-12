@@ -1,9 +1,8 @@
 import { GoogleGenAI, Type } from '@google/genai';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-// Only initialize if we have the key, otherwise operations will throw
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+function getApiKey() {
+  return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('geminiApiKey');
+}
 
 const SYSTEM_INSTRUCTION = `
 You are the song-importer skill for the Bass Tab Manager app.
@@ -47,9 +46,12 @@ const responseSchema = {
 };
 
 export async function analyzeSong(input, imageFile = null) {
-  if (!ai) {
-    throw new Error('VITE_GEMINI_API_KEY is not set in your environment variables.');
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('Please set your Gemini API Key in Settings first.');
   }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   const contents = [];
 

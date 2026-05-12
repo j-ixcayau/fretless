@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Search, Plus, LogOut, Music, ChevronRight, Code, Download, ListMusic, FileText, Wand2 } from 'lucide-react';
+import { Search, Plus, LogOut, Music, ChevronRight, Code, Download, ListMusic, FileText, Wand2, Settings } from 'lucide-react';
 import TabCard from './TabCard';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
@@ -21,7 +21,8 @@ export default function Sidebar({
   onSmartImport,
   onExportAll,
   searchQuery,
-  onSearchChange
+  onSearchChange,
+  onOpenSettings
 }) {
   const { user, logout } = useAuth();
 
@@ -210,13 +211,22 @@ export default function Sidebar({
             <p className="text-sm font-bold truncate">{user?.displayName}</p>
             <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <button 
-            onClick={logout}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
-            title="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={onOpenSettings}
+              className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={logout}
+              className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>
