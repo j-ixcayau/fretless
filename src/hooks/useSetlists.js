@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  serverTimestamp 
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
@@ -27,13 +27,13 @@ export function useSetlists() {
 
     const q = query(
       collection(db, "users", user.uid, "setlists"),
-      orderBy("created_at", "desc")
+      orderBy("created_at", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
+      const docs = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
       setSetlists(docs);
       setLoading(false);
@@ -46,7 +46,7 @@ export function useSetlists() {
     if (!user) return;
     const docRef = await addDoc(collection(db, "users", user.uid, "setlists"), {
       ...setlist,
-      created_at: serverTimestamp()
+      created_at: serverTimestamp(),
     });
     return { id: docRef.id, ...setlist };
   };
@@ -56,7 +56,7 @@ export function useSetlists() {
     const setlistRef = doc(db, "users", user.uid, "setlists", setlistId);
     await updateDoc(setlistRef, {
       ...updates,
-      updated_at: serverTimestamp()
+      updated_at: serverTimestamp(),
     });
   };
 

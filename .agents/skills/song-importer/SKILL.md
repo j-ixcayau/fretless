@@ -50,9 +50,9 @@ When providing the final data for a "New Tab", use this structure:
 
 ## Best Practices
 
-*   **Heuristics**: The app's transposer uses a regex to find chords. Avoid using ambiguous text that might be mistaken for a chord.
-*   **No headers in content**: `Key:` and `Tuning:` lines must NOT appear inside `content` — they are captured by the `base_key` and `tuning` JSON fields.
-*   **No ASCII tabs in content**: Do not add bass tab ASCII blocks to `content`. They are not required and clutter the lyrics view.
-*   **Language**: Support both English (`[Chorus]`) and Spanish (`[Estribillo]`) section headers based on the input.
-*   **Case Formatting**: Prefer Sentence Case (e.g., "Lyrics go here") over ALL CAPS, even if the source is capitalized, to improve readability in the app.
-*   **Duration**: The `duration` field is an **integer in seconds** (e.g., `210` for 3:30). Estimate from the song length if not explicitly known. The `TabEditor` stores and displays this as a numeric input labelled "Duration (s)".
+- **Heuristics**: The app's transposer uses a regex to find chords. Avoid using ambiguous text that might be mistaken for a chord.
+- **No headers in content**: `Key:` and `Tuning:` lines must NOT appear inside `content` — they are captured by the `base_key` and `tuning` JSON fields.
+- **No ASCII tabs in content**: Do not add bass tab ASCII blocks to `content`. They are not required and clutter the lyrics view.
+- **Language**: Support both English (`[Chorus]`) and Spanish (`[Estribillo]`) section headers based on the input.
+- **Case Formatting**: Prefer Sentence Case (e.g., "Lyrics go here") over ALL CAPS, even if the source is capitalized, to improve readability in the app.
+- **Duration**: The `duration` field is an **integer in seconds** (e.g., `210` for 3:30). Estimate from the song length if not explicitly known. The `TabEditor` stores and displays this as a numeric input labelled "Duration (s)".

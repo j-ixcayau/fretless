@@ -1,7 +1,9 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type } from "@google/genai";
 
 function getApiKey() {
-  return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('geminiApiKey');
+  return (
+    import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("geminiApiKey")
+  );
 }
 
 const SYSTEM_INSTRUCTION = `
@@ -41,15 +43,27 @@ const responseSchema = {
     tuning: { type: Type.STRING, description: "e.g., 'Standard', 'Drop D'" },
     duration: { type: Type.INTEGER, description: "Duration in seconds" },
     tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    content: { type: Type.STRING, description: "Sections with chords and lyrics only, starting directly with the first [Section] header" },
+    content: {
+      type: Type.STRING,
+      description:
+        "Sections with chords and lyrics only, starting directly with the first [Section] header",
+    },
   },
-  required: ["title", "artist", "base_key", "tuning", "duration", "tags", "content"],
+  required: [
+    "title",
+    "artist",
+    "base_key",
+    "tuning",
+    "duration",
+    "tags",
+    "content",
+  ],
 };
 
 export async function analyzeSong(input, imageFile = null) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error('Please set your Gemini API Key in Settings first.');
+    throw new Error("Please set your Gemini API Key in Settings first.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -60,7 +74,7 @@ export async function analyzeSong(input, imageFile = null) {
     // Convert File to base64
     const base64Data = await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
       reader.onerror = reject;
       reader.readAsDataURL(imageFile);
     });
@@ -69,7 +83,7 @@ export async function analyzeSong(input, imageFile = null) {
       inlineData: {
         data: base64Data,
         mimeType: imageFile.type,
-      }
+      },
     });
   }
 
@@ -78,18 +92,18 @@ export async function analyzeSong(input, imageFile = null) {
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: "gemini-2.5-flash",
     contents: contents,
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
-      responseMimeType: 'application/json',
+      responseMimeType: "application/json",
       responseSchema: responseSchema,
       temperature: 0.2,
-    }
+    },
   });
 
   if (!response.text) {
-    throw new Error('No response from Gemini');
+    throw new Error("No response from Gemini");
   }
 
   return JSON.parse(response.text);

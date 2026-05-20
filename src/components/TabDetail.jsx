@@ -1,10 +1,31 @@
-import React, { useState, useMemo } from 'react';
-import { Edit3, Trash2, ArrowLeft, ChevronLeft, ChevronRight, Music, RotateCcw, Menu, Save, Play, X, Maximize2, Minimize2 } from 'lucide-react';
-import { transposeTab, transposeChord, getInterval } from '../lib/transposer';
-import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo } from "react";
+import {
+  Edit3,
+  Trash2,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Music,
+  RotateCcw,
+  Menu,
+  Save,
+  Play,
+  X,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { transposeTab, transposeChord, getInterval } from "../lib/transposer";
+import { cn } from "../lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpdatePreferredKey }) {
+export default function TabDetail({
+  tab,
+  onEdit,
+  onDelete,
+  onBack,
+  onMenu,
+  onUpdatePreferredKey,
+}) {
   const [transpose, setTranspose] = useState(0);
   const [preferSharps, setPreferSharps] = useState(true);
   const [isPlayMode, setIsPlayMode] = useState(false);
@@ -25,17 +46,17 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
 
       resetTimer();
 
-      window.addEventListener('mousemove', resetTimer);
-      window.addEventListener('touchstart', resetTimer);
-      window.addEventListener('keydown', resetTimer);
-      window.addEventListener('click', resetTimer);
+      window.addEventListener("mousemove", resetTimer);
+      window.addEventListener("touchstart", resetTimer);
+      window.addEventListener("keydown", resetTimer);
+      window.addEventListener("click", resetTimer);
 
       return () => {
         clearTimeout(timeoutId);
-        window.removeEventListener('mousemove', resetTimer);
-        window.removeEventListener('touchstart', resetTimer);
-        window.removeEventListener('keydown', resetTimer);
-        window.removeEventListener('click', resetTimer);
+        window.removeEventListener("mousemove", resetTimer);
+        window.removeEventListener("touchstart", resetTimer);
+        window.removeEventListener("keydown", resetTimer);
+        window.removeEventListener("click", resetTimer);
       };
     } else {
       setShowControls(true);
@@ -44,7 +65,11 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
 
   // Auto-transpose to preferred key on load
   React.useEffect(() => {
-    if (tab.preferred_key && tab.base_key && tab.preferred_key !== tab.base_key) {
+    if (
+      tab.preferred_key &&
+      tab.base_key &&
+      tab.preferred_key !== tab.base_key
+    ) {
       const interval = getInterval(tab.base_key, tab.preferred_key);
       if (interval !== 0) {
         setTranspose(interval);
@@ -64,7 +89,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
   }, [tab.base_key, transpose, preferSharps]);
 
   const handleTranspose = (delta) => {
-    setTranspose(prev => {
+    setTranspose((prev) => {
       const next = prev + delta;
       // Keep within -12 to +12 semitones
       if (next < -12) return -12;
@@ -76,8 +101,10 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
   const togglePlayMode = () => {
     if (!isPlayMode) {
       if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.error(
+            `Error attempting to enable full-screen mode: ${err.message}`,
+          );
         });
       }
       setIsPlayMode(true);
@@ -100,8 +127,9 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       }
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // Auto-scroll logic
@@ -117,9 +145,15 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
     };
 
     if (scrollableNode) {
-      scrollableNode.addEventListener('wheel', handleUserInteraction, { passive: true });
-      scrollableNode.addEventListener('touchstart', handleUserInteraction, { passive: true });
-      scrollableNode.addEventListener('mousedown', handleUserInteraction, { passive: true });
+      scrollableNode.addEventListener("wheel", handleUserInteraction, {
+        passive: true,
+      });
+      scrollableNode.addEventListener("touchstart", handleUserInteraction, {
+        passive: true,
+      });
+      scrollableNode.addEventListener("mousedown", handleUserInteraction, {
+        passive: true,
+      });
     }
 
     if (isPlayMode && isAutoScrolling && tab.duration) {
@@ -129,7 +163,8 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       const durationMs = parseInt(tab.duration, 10) * 1000 * 0.8;
       if (isNaN(durationMs) || durationMs <= 0) return;
 
-      const maxScroll = scrollableNode.scrollHeight - scrollableNode.clientHeight;
+      const maxScroll =
+        scrollableNode.scrollHeight - scrollableNode.clientHeight;
       if (maxScroll <= 0) return;
 
       let lastTime = null;
@@ -158,9 +193,9 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (scrollableNode) {
-        scrollableNode.removeEventListener('wheel', handleUserInteraction);
-        scrollableNode.removeEventListener('touchstart', handleUserInteraction);
-        scrollableNode.removeEventListener('mousedown', handleUserInteraction);
+        scrollableNode.removeEventListener("wheel", handleUserInteraction);
+        scrollableNode.removeEventListener("touchstart", handleUserInteraction);
+        scrollableNode.removeEventListener("mousedown", handleUserInteraction);
       }
     };
   }, [isPlayMode, isAutoScrolling, tab.duration]);
@@ -170,21 +205,21 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       {/* Header / Actions */}
       <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3 md:gap-4">
-          <button 
+          <button
             onClick={onMenu}
             className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
             title="Show sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <button 
+          <button
             onClick={onBack}
             className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
             title="Back to list"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button 
+          <button
             onClick={onEdit}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
           >
@@ -193,18 +228,22 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
             <span className="sm:hidden">Edit</span>
           </button>
           <div className="h-6 w-px bg-border" />
-          <button 
+          <button
             onClick={togglePlayMode}
             className="flex items-center gap-2 px-4 py-2 bg-surface/50 backdrop-blur-sm border border-border rounded-xl font-bold hover:bg-surface hover:border-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all group"
           >
             <Play className="w-4 h-4 text-primary fill-primary/20 group-hover:fill-primary transition-colors" />
-            <span className="hidden sm:inline text-foreground group-hover:text-primary transition-colors">Play Mode</span>
-            <span className="sm:hidden text-foreground group-hover:text-primary transition-colors">Play</span>
+            <span className="hidden sm:inline text-foreground group-hover:text-primary transition-colors">
+              Play Mode
+            </span>
+            <span className="sm:hidden text-foreground group-hover:text-primary transition-colors">
+              Play
+            </span>
           </button>
           <div className="h-6 w-px bg-border" />
-          <button 
+          <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to delete this tab?')) {
+              if (window.confirm("Are you sure you want to delete this tab?")) {
                 onDelete();
               }
             }}
@@ -221,7 +260,7 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       {/* Play Mode Overlay Controls */}
       <AnimatePresence>
         {isPlayMode && showControls && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -229,27 +268,39 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
           >
             {tab.duration && (
               <>
-                <button 
+                <button
                   onClick={() => setIsAutoScrolling(!isAutoScrolling)}
                   className={cn(
                     "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
-                    isAutoScrolling 
-                      ? "bg-primary text-black border-primary" 
-                      : "bg-surface text-primary border-primary/30 hover:bg-primary/10"
+                    isAutoScrolling
+                      ? "bg-primary text-black border-primary"
+                      : "bg-surface text-primary border-primary/30 hover:bg-primary/10",
                   )}
                 >
-                  {isAutoScrolling ? 'Pause Scroll' : 'Auto-Scroll'}
+                  {isAutoScrolling ? "Pause Scroll" : "Auto-Scroll"}
                 </button>
                 <div className="w-px h-6 bg-border" />
               </>
             )}
             <div className="flex items-center gap-2 px-3 py-2 bg-background/50 rounded-xl border border-border">
-              <button onClick={() => setFontSize(s => Math.max(10, s - 2))} className="p-1 hover:text-primary">-</button>
-              <span className="text-[10px] font-black w-8 text-center">{fontSize}px</span>
-              <button onClick={() => setFontSize(s => Math.min(40, s + 2))} className="p-1 hover:text-primary">+</button>
+              <button
+                onClick={() => setFontSize((s) => Math.max(10, s - 2))}
+                className="p-1 hover:text-primary"
+              >
+                -
+              </button>
+              <span className="text-[10px] font-black w-8 text-center">
+                {fontSize}px
+              </span>
+              <button
+                onClick={() => setFontSize((s) => Math.min(40, s + 2))}
+                className="p-1 hover:text-primary"
+              >
+                +
+              </button>
             </div>
             <div className="w-px h-6 bg-border" />
-            <button 
+            <button
               onClick={togglePlayMode}
               className="p-2 bg-primary text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-primary/20"
             >
@@ -260,170 +311,207 @@ export default function TabDetail({ tab, onEdit, onDelete, onBack, onMenu, onUpd
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {tab.tags?.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-card backdrop-blur-lg border border-border rounded-full text-[10px] font-display font-black uppercase tracking-widest text-muted-foreground">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
+          <div className="flex-1">
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {tab.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 bg-card backdrop-blur-lg border border-border rounded-full text-[9px] font-display font-black uppercase tracking-widest text-muted-foreground"
+                >
                   {tag}
                 </span>
               ))}
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 leading-none uppercase">{tab.title || 'Untitled Tab'}</h1>
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium">{tab.artist || 'Unknown Artist'}</p>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-1 leading-none uppercase">
+              {tab.title || "Untitled Tab"}
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground font-medium">
+              {tab.artist || "Unknown Artist"}
+            </p>
           </div>
 
-          <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
-             <div className="flex items-center justify-between gap-2 md:gap-6 p-4 bg-card backdrop-blur-lg rounded-2xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
-               <div className="text-center flex-1 md:flex-none">
-                 <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-1">Base Key</p>
-                 <p className="text-2xl font-display font-black text-muted-foreground/50">{tab.base_key}</p>
-               </div>
-                <div className="w-px h-10 bg-border" />
-                <div className="text-center flex-1 md:flex-none relative group">
-                  <p className="text-[10px] font-display font-bold text-primary uppercase tracking-widest mb-1">Current Key</p>
-                  <p className="text-2xl font-display font-black text-primary">{currentKey}</p>
-                  
-                  {/* Preferred Key Indicator */}
-                  {tab.preferred_key === currentKey && (
-                    <div className="absolute -top-1 -right-2 w-2 h-2 bg-primary rounded-full animate-pulse" title="Preferred Key" />
-                  )}
-                </div>
-                <div className="w-px h-10 bg-border" />
-                <div className="text-center flex-1 md:flex-none">
-                  <p className="text-[10px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-1">Tuning</p>
-                  <p className="text-xl font-display font-bold">{tab.tuning}</p>
-                </div>
+          <div className="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
+            <div className="flex items-center justify-between gap-3 p-3 bg-card backdrop-blur-lg rounded-xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
+              <div className="text-center flex-1 md:flex-none">
+                <p className="text-[9px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+                  Base
+                </p>
+                <p className="text-lg font-display font-black text-muted-foreground/50">
+                  {tab.base_key}
+                </p>
               </div>
-              
-              <AnimatePresence>
-                {currentKey && currentKey !== (tab.preferred_key || tab.base_key) && (
+              <div className="w-px h-8 bg-border" />
+              <div className="text-center flex-1 md:flex-none relative group">
+                <p className="text-[9px] font-display font-bold text-primary uppercase tracking-widest mb-0.5">
+                  Current
+                </p>
+                <p className="text-lg font-display font-black text-primary">
+                  {currentKey}
+                </p>
+
+                {/* Preferred Key Indicator */}
+                {tab.preferred_key === currentKey && (
+                  <div
+                    className="absolute -top-1 -right-2 w-1.5 h-1.5 bg-primary rounded-full animate-pulse"
+                    title="Preferred Key"
+                  />
+                )}
+              </div>
+              <div className="w-px h-8 bg-border" />
+              <div className="text-center flex-1 md:flex-none">
+                <p className="text-[9px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+                  Tuning
+                </p>
+                <p className="text-sm mt-1 font-display font-bold">
+                  {tab.tuning}
+                </p>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {currentKey &&
+                currentKey !== (tab.preferred_key || tab.base_key) && (
                   <motion.button
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => onUpdatePreferredKey(currentKey)}
-                    className="flex items-center gap-2 px-4 py-3 bg-primary/10 border border-primary/50 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 border border-primary/50 text-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center shadow-[0_0_10px_rgba(168,85,247,0.15)] min-h-[44px]"
                   >
-                    <Save className="w-4 h-4" />
+                    <Save className="w-3 h-3" />
                     Save as Preferred Key
                   </motion.button>
                 )}
-              </AnimatePresence>
-           </div>
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Transposition Controls */}
-        <div className="mb-8 p-6 bg-surface/50 rounded-2xl border border-border grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-          <div className="flex flex-col items-center md:items-start order-2 md:order-1">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Transposition</h3>
-            <div className="flex items-center gap-4">
-              <button 
+        <div className="mb-6 p-4 bg-surface/30 rounded-xl border border-border flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+            <div className="flex items-center gap-2">
+              <button
                 onClick={() => handleTranspose(-1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border border-border hover:border-primary transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border hover:border-primary transition-colors min-w-[44px] min-h-[44px]"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              
-              <div className="flex flex-col items-center min-w-[80px]">
-                <motion.span 
+
+              <div className="flex flex-col items-center min-w-[50px]">
+                <motion.span
                   key={transpose}
-                  initial={{ scale: 1.2, color: '#f59e0b' }}
-                  animate={{ scale: 1, color: '#ffffff' }}
-                  className="text-2xl font-black"
+                  initial={{ scale: 1.2, color: "#f59e0b" }}
+                  animate={{ scale: 1, color: "#ffffff" }}
+                  className="text-lg font-black leading-none"
                 >
                   {transpose > 0 ? `+${transpose}` : transpose}
                 </motion.span>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Semitones</span>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">
+                  Steps
+                </span>
               </div>
 
-              <button 
+              <button
                 onClick={() => handleTranspose(1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border border-border hover:border-primary transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border hover:border-primary transition-colors min-w-[44px] min-h-[44px]"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-          </div>
 
-          <div className="flex flex-col items-center order-1 md:order-2">
-            <button 
+            <button
               onClick={() => setTranspose(0)}
               disabled={transpose === 0}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
-                transpose === 0 
-                  ? "opacity-30 border-transparent text-muted-foreground cursor-not-allowed" 
-                  : "border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold transition-all border min-h-[44px]",
+                transpose === 0
+                  ? "opacity-30 border-transparent text-muted-foreground cursor-not-allowed"
+                  : "border-primary/30 text-primary hover:bg-primary/10 hover:border-primary",
               )}
             >
               <RotateCcw className="w-3 h-3" />
-              Reset to Original
+              <span className="hidden sm:inline">Reset</span>
             </button>
           </div>
 
-          <div className="flex flex-col items-center md:items-end order-3">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Notation</h3>
-            <div className="flex bg-background p-1 rounded-xl border border-border">
-              <button 
-                onClick={() => setPreferSharps(true)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                  preferSharps ? "bg-primary text-black" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Sharps (#)
-              </button>
-              <button 
-                onClick={() => setPreferSharps(false)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                  !preferSharps ? "bg-primary text-black" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Flats (b)
-              </button>
-            </div>
+          <div className="flex bg-background p-1 rounded-lg border border-border w-full md:w-auto">
+            <button
+              onClick={() => setPreferSharps(true)}
+              className={cn(
+                "flex-1 md:flex-none px-4 py-2 rounded-md text-[10px] font-bold transition-all min-h-[44px]",
+                preferSharps
+                  ? "bg-primary text-black"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Sharps (#)
+            </button>
+            <button
+              onClick={() => setPreferSharps(false)}
+              className={cn(
+                "flex-1 md:flex-none px-4 py-2 rounded-md text-[10px] font-bold transition-all min-h-[44px]",
+                !preferSharps
+                  ? "bg-primary text-black"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Flats (b)
+            </button>
           </div>
         </div>
 
         {/* Tab Content */}
         <div className="relative group">
-           {!isPlayMode && (
-             <div className="absolute -top-3 -left-3 px-3 py-1 bg-primary text-black text-[10px] font-black rounded-md z-10 shadow-lg">
-               BASS TAB
-             </div>
-           )}
-            <div 
-              ref={scrollRef}
-              className={cn(
+          {!isPlayMode && (
+            <div className="absolute -top-3 -left-3 px-3 py-1 bg-primary text-black text-[10px] font-black rounded-md z-10 shadow-lg">
+              BASS TAB
+            </div>
+          )}
+          <div
+            ref={scrollRef}
+            className={cn(
               "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col",
-              isPlayMode ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background" : "p-8 rounded-3xl"
-            )}>
-              {isPlayMode && (
-                <div className="mb-8 md:mb-12 text-center w-full">
-                  <h1 className="text-2xl md:text-4xl font-black mb-2 uppercase tracking-tight">{tab.title}</h1>
-                  <p className="text-lg md:text-xl text-muted-foreground font-medium">{tab.artist} • <span className="text-primary">{currentKey}</span></p>
-                </div>
-              )}
-              <pre 
-                className="font-mono leading-relaxed whitespace-pre select-text transition-all duration-300"
-                style={{ fontSize: `${fontSize}px` }}
-              >
-                {transposedContent}
-              </pre>
-              
-              {/* Decoration */}
-              <div className="absolute right-4 bottom-4 opacity-10 pointer-events-none">
-                <Music className="w-24 h-24" />
+              isPlayMode
+                ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background"
+                : "p-8 rounded-3xl",
+            )}
+          >
+            {isPlayMode && (
+              <div className="mb-8 md:mb-12 text-center w-full">
+                <h1 className="text-2xl md:text-4xl font-black mb-2 uppercase tracking-tight">
+                  {tab.title}
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground font-medium">
+                  {tab.artist} •{" "}
+                  <span className="text-primary">{currentKey}</span>
+                </p>
               </div>
-           </div>
+            )}
+            <pre
+              className="font-mono leading-relaxed whitespace-pre select-text transition-all duration-300"
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {transposedContent}
+            </pre>
+
+            {/* Decoration */}
+            <div className="absolute right-4 bottom-4 opacity-10 pointer-events-none">
+              <Music className="w-24 h-24" />
+            </div>
+          </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex justify-between text-xs font-bold text-muted-foreground uppercase tracking-widest">
-          <span>Created: {tab.created_at?.toDate?.().toLocaleDateString() || 'Recently'}</span>
-          <span>Last Edited: {tab.updated_at?.toDate?.().toLocaleDateString() || 'Never'}</span>
+          <span>
+            Created:{" "}
+            {tab.created_at?.toDate?.().toLocaleDateString() || "Recently"}
+          </span>
+          <span>
+            Last Edited:{" "}
+            {tab.updated_at?.toDate?.().toLocaleDateString() || "Never"}
+          </span>
         </div>
       </div>
     </div>

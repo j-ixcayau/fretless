@@ -26,6 +26,7 @@ CSS Variable Definition --> @theme inline Mapping --> Tailwind Utility Class
 ```
 
 Dark mode switching:
+
 ```
 ThemeProvider toggles .dark class on <html>
   --> CSS variables update automatically (.dark overrides :root)
@@ -60,15 +61,15 @@ rm -f tailwind.config.ts
 Copy `assets/vite.config.ts` or add the Tailwind plugin:
 
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { '@': path.resolve(__dirname, './src') } }
-})
+  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+});
 ```
 
 ### Step 3: Four-Step CSS Architecture (Mandatory)
@@ -190,12 +191,14 @@ export function ModeToggle() {
 ## Critical Rules
 
 **Always:**
+
 - Wrap colours with `hsl()` in `:root`/`.dark`
 - Use `@theme inline` to map all CSS variables
 - Use `@tailwindcss/vite` plugin (NOT PostCSS)
 - Delete `tailwind.config.ts` if it exists
 
 **Never:**
+
 - Put `:root`/`.dark` inside `@layer base`
 - Use `.dark { @theme { } }` (v4 doesn't support nested @theme)
 - Double-wrap: `hsl(var(--background))`
@@ -207,26 +210,26 @@ export function ModeToggle() {
 
 ### Quick Diagnosis
 
-| # | Symptom | Cause | Fix |
-|---|---------|-------|-----|
-| 1 | Variables ignored / theme broken | `:root` inside `@layer base` | Move `:root` and `.dark` to root level |
-| 2 | Dark mode colours not switching | `.dark { @theme { } }` | Use CSS variables + single `@theme inline` |
-| 3 | Colours all black/white | Double `hsl()` wrapping | Use `var(--background)` not `hsl(var(...))` |
-| 4 | `bg-primary` not generated | Colours in `tailwind.config.ts` | Delete config, use `@theme inline` |
-| 5 | `bg-background` class missing | No `@theme inline` block | Add `@theme inline` mapping variables |
-| 6 | shadcn components break | `components.json` has config path | Set `"config": ""` (empty string) |
-| 7 | Tailwind not processing | Using PostCSS plugin | Switch to `@tailwindcss/vite` plugin |
-| 8 | `@/` imports fail | Missing path aliases | Add `paths` to `tsconfig.app.json` |
-| 9 | Redundant `dark:` variants | Using `dark:bg-primary-dark` | Just use `bg-primary` -- variables handle it |
-| 10 | Hardcoded colours everywhere | Using `bg-blue-600 dark:bg-blue-400` | Use semantic tokens: `bg-primary` |
-| 11 | Class merging bugs | String concatenation for classes | Use `cn()` from `@/lib/utils` |
-| 12 | Radix Select crashes | Empty string value `value=""` | Use `value="placeholder"` |
-| 13 | Wrong Tailwind version | Installed `tailwindcss@^3` | Install `tailwindcss@^4.1.0` + `@tailwindcss/vite` |
-| 14 | Missing peer deps | Only installed `tailwindcss` | Also install `clsx`, `tailwind-merge`, `@types/node` |
-| 15 | Broken in dark mode | Only tested light mode | Test light, dark, system, and toggle transitions |
-| 16 | Fails WCAG contrast | Looks fine visually | Check ratios: 4.5:1 normal text, 3:1 large/UI |
-| 17 | Build fails on animation import | Using `tailwindcss-animate` (deprecated) | Use `tw-animate-css` or native CSS animations |
-| 18 | CSS priority issues | Duplicate `@layer base` after shadcn init | Merge into single `@layer base` block |
+| #   | Symptom                          | Cause                                     | Fix                                                  |
+| --- | -------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| 1   | Variables ignored / theme broken | `:root` inside `@layer base`              | Move `:root` and `.dark` to root level               |
+| 2   | Dark mode colours not switching  | `.dark { @theme { } }`                    | Use CSS variables + single `@theme inline`           |
+| 3   | Colours all black/white          | Double `hsl()` wrapping                   | Use `var(--background)` not `hsl(var(...))`          |
+| 4   | `bg-primary` not generated       | Colours in `tailwind.config.ts`           | Delete config, use `@theme inline`                   |
+| 5   | `bg-background` class missing    | No `@theme inline` block                  | Add `@theme inline` mapping variables                |
+| 6   | shadcn components break          | `components.json` has config path         | Set `"config": ""` (empty string)                    |
+| 7   | Tailwind not processing          | Using PostCSS plugin                      | Switch to `@tailwindcss/vite` plugin                 |
+| 8   | `@/` imports fail                | Missing path aliases                      | Add `paths` to `tsconfig.app.json`                   |
+| 9   | Redundant `dark:` variants       | Using `dark:bg-primary-dark`              | Just use `bg-primary` -- variables handle it         |
+| 10  | Hardcoded colours everywhere     | Using `bg-blue-600 dark:bg-blue-400`      | Use semantic tokens: `bg-primary`                    |
+| 11  | Class merging bugs               | String concatenation for classes          | Use `cn()` from `@/lib/utils`                        |
+| 12  | Radix Select crashes             | Empty string value `value=""`             | Use `value="placeholder"`                            |
+| 13  | Wrong Tailwind version           | Installed `tailwindcss@^3`                | Install `tailwindcss@^4.1.0` + `@tailwindcss/vite`   |
+| 14  | Missing peer deps                | Only installed `tailwindcss`              | Also install `clsx`, `tailwind-merge`, `@types/node` |
+| 15  | Broken in dark mode              | Only tested light mode                    | Test light, dark, system, and toggle transitions     |
+| 16  | Fails WCAG contrast              | Looks fine visually                       | Check ratios: 4.5:1 normal text, 3:1 large/UI        |
+| 17  | Build fails on animation import  | Using `tailwindcss-animate` (deprecated)  | Use `tw-animate-css` or native CSS animations        |
+| 18  | CSS priority issues              | Duplicate `@layer base` after shadcn init | Merge into single `@layer base` block                |
 
 ### Gotcha Details with Code Examples
 
@@ -235,17 +238,25 @@ export function ModeToggle() {
 Tailwind v4 strips CSS outside `@theme`/`@layer`, but `:root` must be at root level to persist. This is the most common setup failure.
 
 WRONG:
+
 ```css
 @layer base {
-  :root { --background: hsl(0 0% 100%); }
+  :root {
+    --background: hsl(0 0% 100%);
+  }
 }
 ```
 
 CORRECT:
+
 ```css
-:root { --background: hsl(0 0% 100%); }
+:root {
+  --background: hsl(0 0% 100%);
+}
 @layer base {
-  body { background-color: var(--background); }
+  body {
+    background-color: var(--background);
+  }
 }
 ```
 
@@ -254,16 +265,30 @@ CORRECT:
 Tailwind v4 does not support `@theme` inside selectors. Use CSS variables in `:root`/`.dark` with a single `@theme inline` block.
 
 WRONG:
+
 ```css
-@theme { --color-primary: hsl(0 0% 0%); }
-.dark { @theme { --color-primary: hsl(0 0% 100%); } }
+@theme {
+  --color-primary: hsl(0 0% 0%);
+}
+.dark {
+  @theme {
+    --color-primary: hsl(0 0% 100%);
+  }
+}
 ```
 
 CORRECT:
+
 ```css
-:root { --primary: hsl(0 0% 0%); }
-.dark { --primary: hsl(0 0% 100%); }
-@theme inline { --color-primary: var(--primary); }
+:root {
+  --primary: hsl(0 0% 0%);
+}
+.dark {
+  --primary: hsl(0 0% 100%);
+}
+@theme inline {
+  --color-primary: var(--primary);
+}
 ```
 
 **#3 -- Double hsl() wrapping**
@@ -282,37 +307,48 @@ Tailwind v4 completely ignores `theme.extend.colors` in config files. Delete the
 Without `@theme inline`, Tailwind has no knowledge of your CSS variables. Utility classes like `bg-background` simply won't be generated.
 
 WRONG:
+
 ```css
-:root { --background: hsl(0 0% 100%); }
+:root {
+  --background: hsl(0 0% 100%);
+}
 /* No @theme inline block -- bg-background won't exist */
 ```
 
 CORRECT:
+
 ```css
-:root { --background: hsl(0 0% 100%); }
-@theme inline { --color-background: var(--background); }
+:root {
+  --background: hsl(0 0% 100%);
+}
+@theme inline {
+  --color-background: var(--background);
+}
 ```
 
 **#7 -- PostCSS vs Vite plugin**
 
 WRONG:
+
 ```typescript
 export default defineConfig({
-  css: { postcss: './postcss.config.js' }  // Old v3 way
-})
+  css: { postcss: "./postcss.config.js" }, // Old v3 way
+});
 ```
 
 CORRECT:
+
 ```typescript
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
-  plugins: [react(), tailwindcss()]  // v4 way
-})
+  plugins: [react(), tailwindcss()], // v4 way
+});
 ```
 
 **#8 -- Path aliases**
 
 Add to `tsconfig.app.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -324,7 +360,7 @@ Add to `tsconfig.app.json`:
 
 **#11 -- cn() utility for class merging**
 
-WRONG: `` className={`base ${isActive && 'active'}`} ``
+WRONG: ``className={`base ${isActive && 'active'}`}``
 CORRECT: `className={cn("base", isActive && "active")}`
 
 `cn()` from `@/lib/utils` properly merges and deduplicates Tailwind classes.
@@ -358,16 +394,31 @@ Radix UI Select does not allow empty string values. Use `value="placeholder"` in
 `shadcn init` adds its own `@layer base` block. Check `src/index.css` immediately after running init and merge any duplicate blocks into one.
 
 WRONG:
+
 ```css
-@layer base { body { background-color: var(--background); } }
-@layer base { * { border-color: hsl(var(--border)); } }  /* duplicate from shadcn */
+@layer base {
+  body {
+    background-color: var(--background);
+  }
+}
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+} /* duplicate from shadcn */
 ```
 
 CORRECT:
+
 ```css
 @layer base {
-  * { border-color: var(--border); }
-  body { background-color: var(--background); color: var(--foreground); }
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
 }
 ```
 
@@ -400,6 +451,7 @@ CORRECT:
 ## Asset Files
 
 Copy from `assets/` directory:
+
 - `index.css` -- Complete CSS with all colour variables
 - `components.json` -- shadcn/ui v4 config
 - `vite.config.ts` -- Vite + Tailwind plugin

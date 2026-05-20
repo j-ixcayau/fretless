@@ -1,5 +1,31 @@
-const NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const NOTES_SHARP = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+];
+const NOTES_FLAT = [
+  "C",
+  "Db",
+  "D",
+  "Eb",
+  "E",
+  "F",
+  "Gb",
+  "G",
+  "Ab",
+  "A",
+  "Bb",
+  "B",
+];
 
 /**
  * Transposes a single note string.
@@ -25,7 +51,7 @@ export function transposeChord(chord, semitones, preferSharps = true) {
   // Regex to find notes in a chord string (including bass notes after /)
   // Matches A-G followed by optional # or b
   const noteRegex = /[A-G][#b]?/g;
-  
+
   return chord.replace(noteRegex, (match) => {
     return transposeNote(match, semitones, preferSharps);
   });
@@ -38,22 +64,23 @@ export function transposeChord(chord, semitones, preferSharps = true) {
 export function transposeTab(content, semitones, preferSharps = true) {
   if (semitones === 0) return content;
 
-  const lines = content.split('\n');
-  const transposedLines = lines.map(line => {
+  const lines = content.split("\n");
+  const transposedLines = lines.map((line) => {
     // Check if the line is a "string" line (e.g. G|---)
     // We only transpose the string labels (the part before the |)
-    if (line.includes('|')) {
-      const parts = line.split('|');
+    if (line.includes("|")) {
+      const parts = line.split("|");
       // Transpose the label part if it's a note
       const label = parts[0].trim();
       const transposedLabel = transposeChord(label, semitones, preferSharps);
-      return transposedLabel + '|' + parts.slice(1).join('|');
+      return transposedLabel + "|" + parts.slice(1).join("|");
     }
 
     // Check if the line looks like it contains chords (e.g. "Am   G   F")
     // A chord line usually doesn't have many numbers and contains note-like characters.
     // This is a heuristic.
-    const chordRegex = /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
+    const chordRegex =
+      /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
     if (chordRegex.test(line)) {
       // Reset lastIndex because .test() on a global regex advances it
       chordRegex.lastIndex = 0;
@@ -65,13 +92,16 @@ export function transposeTab(content, semitones, preferSharps = true) {
     // Also handle "Key: E" style headers
     const keyMatch = line.match(/(Key:\s*)([A-G][#b]?)/i);
     if (keyMatch) {
-      return line.replace(keyMatch[2], transposeNote(keyMatch[2], semitones, preferSharps));
+      return line.replace(
+        keyMatch[2],
+        transposeNote(keyMatch[2], semitones, preferSharps),
+      );
     }
 
     return line;
   });
 
-  return transposedLines.join('\n');
+  return transposedLines.join("\n");
 }
 /**
  * Calculates the semitone interval between two notes.
@@ -79,17 +109,17 @@ export function transposeTab(content, semitones, preferSharps = true) {
  */
 export function getInterval(fromNote, toNote) {
   if (!fromNote || !toNote) return 0;
-  
+
   let fromIndex = NOTES_SHARP.indexOf(fromNote);
   if (fromIndex === -1) fromIndex = NOTES_FLAT.indexOf(fromNote);
-  
+
   let toIndex = NOTES_SHARP.indexOf(toNote);
   if (toIndex === -1) toIndex = NOTES_FLAT.indexOf(toNote);
-  
+
   if (fromIndex === -1 || toIndex === -1) return 0;
-  
+
   let diff = toIndex - fromIndex;
-  // We want the shortest path or always positive? 
+  // We want the shortest path or always positive?
   // Let's just return the positive distance 0-11.
   if (diff < 0) diff += 12;
   return diff;
