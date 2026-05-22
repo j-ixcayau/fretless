@@ -100,18 +100,23 @@ export default function TabDetail({
 
   const togglePlayMode = () => {
     if (!isPlayMode) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch((err) => {
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch((err) => {
           console.error(
             `Error attempting to enable full-screen mode: ${err.message}`,
           );
         });
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
       }
       setIsPlayMode(true);
       setIsAutoScrolling(false);
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
       }
       setIsPlayMode(false);
       setIsAutoScrolling(false);
@@ -121,15 +126,21 @@ export default function TabDetail({
   // Handle escape key to exit play mode
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         setIsPlayMode(false);
         setIsAutoScrolling(false);
       }
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+    };
   }, []);
 
   // Auto-scroll logic
@@ -474,7 +485,7 @@ export default function TabDetail({
             className={cn(
               "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col",
               isPlayMode
-                ? "fixed inset-0 z-[60] p-6 md:p-20 items-start md:items-center bg-background"
+                ? "fixed top-0 left-0 w-full h-[100dvh] z-[60] p-6 md:p-20 items-start md:items-center bg-background"
                 : "p-8 rounded-3xl",
             )}
           >
