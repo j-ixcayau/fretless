@@ -43,18 +43,18 @@ export default function Sidebar({
   )?.[1];
 
   return (
-    <aside className="w-full md:w-80 h-full bg-card backdrop-blur-lg border-r border-border flex flex-col z-20">
+    <aside className="w-full md:w-80 h-full bg-background/80 backdrop-blur-2xl border-r border-border flex flex-col z-20">
       {/* Header */}
       <div className="p-6 pb-2">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <Music className="w-6 h-6 text-black" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.4)]">
+            <Music className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="font-sans font-black text-xl tracking-tight leading-none">
+            <h1 className="font-display text-2xl tracking-wider leading-none text-foreground">
               BASS TABS
             </h1>
-            <span className="text-[10px] text-primary font-bold uppercase tracking-[0.2em]">
+            <span className="text-[10px] text-secondary font-bold uppercase tracking-[0.2em]">
               Manager
             </span>
           </div>
@@ -157,7 +157,7 @@ export default function Sidebar({
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-24 bg-surface/50 rounded-xl border border-border animate-pulse"
+                className="h-24 bg-card/50 rounded-xl border border-border animate-pulse"
               />
             ))}
           </div>
@@ -201,8 +201,8 @@ export default function Sidebar({
               className={cn(
                 "w-full text-left p-4 rounded-xl border transition-all duration-300 group flex items-center justify-between relative overflow-hidden backdrop-blur-sm",
                 selectedSetlistId === setlist.id
-                  ? "bg-primary/10 border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-                  : "bg-surface/30 border-border hover:border-primary/50 hover:bg-surface/60",
+                  ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(124,58,237,0.2)]"
+                  : "bg-card/30 border-border hover:border-primary/50 hover:bg-card/60",
               )}
             >
               <div>
@@ -240,7 +240,7 @@ export default function Sidebar({
       </div>
 
       {/* User Section */}
-      <div className="p-4 mt-auto border-t border-border bg-surface/50">
+      <div className="p-4 mt-auto border-t border-border bg-card/50">
         <div className="flex items-center gap-3">
           <img
             src={user?.photoURL}

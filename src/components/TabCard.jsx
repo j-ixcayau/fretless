@@ -26,8 +26,8 @@ export default function TabCard({ tab, isActive, onClick }) {
       className={cn(
         "w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden backdrop-blur-sm",
         isActive
-          ? "bg-primary/10 border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-          : "bg-surface/30 border-border hover:bg-surface/60 hover:border-primary/50",
+          ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(124,58,237,0.2)]"
+          : "bg-card/30 border-border hover:bg-card/60 hover:border-primary/50",
       )}
     >
       <div className="flex justify-between items-start mb-2">
@@ -65,7 +65,7 @@ export default function TabCard({ tab, isActive, onClick }) {
       {isActive && (
         <motion.div
           layoutId="activeTabIndicator"
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_10px_rgba(124,58,237,0.8)]"
         />
       )}
     </motion.button>

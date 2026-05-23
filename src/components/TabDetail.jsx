@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Edit3,
   Trash2,
@@ -143,10 +144,21 @@ export default function TabDetail({
     };
   }, []);
 
+  // Handle body scroll for Play Mode (forces iOS Safari to hide navbars)
+  React.useEffect(() => {
+    if (isPlayMode) {
+      document.body.classList.add("play-mode-active");
+      return () => {
+        document.body.classList.remove("play-mode-active");
+        window.scrollTo(0, 0); // reset scroll when exiting
+      };
+    }
+  }, [isPlayMode]);
+
   // Auto-scroll logic
   React.useEffect(() => {
     let animationFrameId;
-    const scrollableNode = scrollRef.current;
+    const scrollableNode = isPlayMode ? window : scrollRef.current;
 
     const handleUserInteraction = () => {
       if (isAutoScrolling) {
@@ -168,18 +180,15 @@ export default function TabDetail({
     }
 
     if (isPlayMode && isAutoScrolling && tab.duration) {
-      if (!scrollableNode) return;
-
-      // Decrease auto scroll duration by 20% to make the scroll faster
       const durationMs = parseInt(tab.duration, 10) * 1000 * 0.8;
       if (isNaN(durationMs) || durationMs <= 0) return;
 
       const maxScroll =
-        scrollableNode.scrollHeight - scrollableNode.clientHeight;
+        document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll <= 0) return;
 
       let lastTime = null;
-      let exactScrollTop = scrollableNode.scrollTop;
+      let exactScrollTop = window.scrollY;
 
       const step = (timestamp) => {
         if (!lastTime) lastTime = timestamp;
@@ -188,10 +197,39 @@ export default function TabDetail({
 
         const speed = maxScroll / durationMs;
         exactScrollTop += speed * delta;
-        scrollableNode.scrollTop = exactScrollTop;
+        window.scrollTo(0, exactScrollTop);
 
-        // Stop if we hit the bottom
-        if (Math.ceil(scrollableNode.scrollTop) >= maxScroll) {
+        if (Math.ceil(window.scrollY) >= maxScroll) {
+          setIsAutoScrolling(false);
+        } else {
+          animationFrameId = requestAnimationFrame(step);
+        }
+      };
+
+      animationFrameId = requestAnimationFrame(step);
+    } else if (!isPlayMode && isAutoScrolling && tab.duration) {
+      if (!scrollRef.current) return;
+
+      const durationMs = parseInt(tab.duration, 10) * 1000 * 0.8;
+      if (isNaN(durationMs) || durationMs <= 0) return;
+
+      const maxScroll =
+        scrollRef.current.scrollHeight - scrollRef.current.clientHeight;
+      if (maxScroll <= 0) return;
+
+      let lastTime = null;
+      let exactScrollTop = scrollRef.current.scrollTop;
+
+      const step = (timestamp) => {
+        if (!lastTime) lastTime = timestamp;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        const speed = maxScroll / durationMs;
+        exactScrollTop += speed * delta;
+        scrollRef.current.scrollTop = exactScrollTop;
+
+        if (Math.ceil(scrollRef.current.scrollTop) >= maxScroll) {
           setIsAutoScrolling(false);
         } else {
           animationFrameId = requestAnimationFrame(step);
@@ -211,8 +249,91 @@ export default function TabDetail({
     };
   }, [isPlayMode, isAutoScrolling, tab.duration]);
 
+  const playModePortal = isPlayMode
+    ? createPortal(
+        <div className="absolute top-0 left-0 w-full min-h-screen z-[200] bg-background">
+          <AnimatePresence>
+            {showControls && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:left-auto md:transform-none md:top-6 md:right-6 z-[210] flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl w-max max-w-[90vw]"
+              >
+                {tab.duration && (
+                  <>
+                    <button
+                      onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
+                        isAutoScrolling
+                          ? "bg-primary text-black border-primary"
+                          : "bg-surface text-primary border-primary/30 hover:bg-primary/10",
+                      )}
+                    >
+                      {isAutoScrolling ? "Pause Scroll" : "Auto-Scroll"}
+                    </button>
+                    <div className="w-px h-6 bg-border" />
+                  </>
+                )}
+                <div className="flex items-center gap-2 px-3 py-2 bg-background/50 rounded-xl border border-border">
+                  <button
+                    onClick={() => setFontSize((s) => Math.max(10, s - 2))}
+                    className="p-1 hover:text-primary"
+                  >
+                    -
+                  </button>
+                  <span className="text-[10px] font-black w-8 text-center">
+                    {fontSize}px
+                  </span>
+                  <button
+                    onClick={() => setFontSize((s) => Math.min(40, s + 2))}
+                    className="p-1 hover:text-primary"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="w-px h-6 bg-border" />
+                <button
+                  onClick={togglePlayMode}
+                  className="p-2 bg-primary text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-primary/20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="p-6 md:p-20 flex flex-col items-start md:items-center max-w-5xl mx-auto w-full min-h-screen relative">
+            <div className="mb-8 md:mb-12 text-center w-full">
+              <h1 className="text-4xl md:text-6xl font-display font-normal uppercase tracking-wide text-primary mb-4">
+                {tab.title}
+              </h1>
+              <p className="text-xl md:text-2xl text-secondary font-medium tracking-wide">
+                {tab.artist} •{" "}
+                <span className="text-muted-foreground">{currentKey}</span>
+              </p>
+            </div>
+            <pre
+              className="font-mono leading-relaxed whitespace-pre select-text transition-all duration-300 w-full md:w-auto overflow-x-auto pb-24"
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {transposedContent}
+            </pre>
+
+            <div className="fixed right-4 bottom-4 opacity-10 pointer-events-none">
+              <Music className="w-24 h-24" />
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="flex flex-col flex-1 bg-background relative min-h-0">
+      {playModePortal}
+
       {/* Header / Actions */}
       <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3 md:gap-4">
@@ -268,59 +389,6 @@ export default function TabDetail({
         </div>
       </div>
 
-      {/* Play Mode Overlay Controls */}
-      <AnimatePresence>
-        {isPlayMode && showControls && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:left-auto md:transform-none md:top-6 md:right-6 z-[100] flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl w-max max-w-[90vw]"
-          >
-            {tab.duration && (
-              <>
-                <button
-                  onClick={() => setIsAutoScrolling(!isAutoScrolling)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
-                    isAutoScrolling
-                      ? "bg-primary text-black border-primary"
-                      : "bg-surface text-primary border-primary/30 hover:bg-primary/10",
-                  )}
-                >
-                  {isAutoScrolling ? "Pause Scroll" : "Auto-Scroll"}
-                </button>
-                <div className="w-px h-6 bg-border" />
-              </>
-            )}
-            <div className="flex items-center gap-2 px-3 py-2 bg-background/50 rounded-xl border border-border">
-              <button
-                onClick={() => setFontSize((s) => Math.max(10, s - 2))}
-                className="p-1 hover:text-primary"
-              >
-                -
-              </button>
-              <span className="text-[10px] font-black w-8 text-center">
-                {fontSize}px
-              </span>
-              <button
-                onClick={() => setFontSize((s) => Math.min(40, s + 2))}
-                className="p-1 hover:text-primary"
-              >
-                +
-              </button>
-            </div>
-            <div className="w-px h-6 bg-border" />
-            <button
-              onClick={togglePlayMode}
-              className="p-2 bg-primary text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-primary/20"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
@@ -329,53 +397,53 @@ export default function TabDetail({
               {tab.tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 bg-card backdrop-blur-lg border border-border rounded-full text-[9px] font-display font-black uppercase tracking-widest text-muted-foreground"
+                  className="px-3 py-1 bg-primary/20 backdrop-blur-lg border border-primary/30 rounded-full text-[10px] font-display font-normal uppercase tracking-widest text-primary"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-1 leading-none uppercase">
+            <h1 className="text-3xl md:text-5xl font-display font-normal tracking-wide mb-2 leading-none uppercase text-foreground">
               {tab.title || "Untitled Tab"}
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground font-medium">
+            <p className="text-sm md:text-lg text-secondary font-medium tracking-wide">
               {tab.artist || "Unknown Artist"}
             </p>
           </div>
 
           <div className="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
-            <div className="flex items-center justify-between gap-3 p-3 bg-card backdrop-blur-lg rounded-xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
-              <div className="text-center flex-1 md:flex-none">
-                <p className="text-[9px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+            <div className="flex items-center justify-between gap-3 p-4 bg-surface/50 backdrop-blur-lg rounded-2xl border border-border shadow-inner w-full md:w-auto overflow-x-auto">
+              <div className="text-center flex-1 md:flex-none px-4">
+                <p className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest mb-1">
                   Base
                 </p>
-                <p className="text-lg font-display font-black text-muted-foreground/50">
+                <p className="text-2xl font-display font-normal text-muted-foreground/50">
                   {tab.base_key}
                 </p>
               </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="text-center flex-1 md:flex-none relative group">
-                <p className="text-[9px] font-display font-bold text-primary uppercase tracking-widest mb-0.5">
+              <div className="w-px h-10 bg-border" />
+              <div className="text-center flex-1 md:flex-none px-4 relative group">
+                <p className="text-[10px] font-display font-normal text-primary uppercase tracking-widest mb-1">
                   Current
                 </p>
-                <p className="text-lg font-display font-black text-primary">
+                <p className="text-2xl font-display font-normal text-primary">
                   {currentKey}
                 </p>
 
                 {/* Preferred Key Indicator */}
                 {tab.preferred_key === currentKey && (
                   <div
-                    className="absolute -top-1 -right-2 w-1.5 h-1.5 bg-primary rounded-full animate-pulse"
+                    className="absolute top-0 -right-2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(124,58,237,0.8)]"
                     title="Preferred Key"
                   />
                 )}
               </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="text-center flex-1 md:flex-none">
-                <p className="text-[9px] font-display font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+              <div className="w-px h-10 bg-border" />
+              <div className="text-center flex-1 md:flex-none px-4">
+                <p className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest mb-1">
                   Tuning
                 </p>
-                <p className="text-sm mt-1 font-display font-bold">
+                <p className="text-lg mt-1 font-display font-normal">
                   {tab.tuning}
                 </p>
               </div>
@@ -410,16 +478,16 @@ export default function TabDetail({
                 <ChevronLeft className="w-5 h-5" />
               </button>
 
-              <div className="flex flex-col items-center min-w-[50px]">
+              <div className="flex flex-col items-center min-w-[60px]">
                 <motion.span
                   key={transpose}
-                  initial={{ scale: 1.2, color: "#f59e0b" }}
+                  initial={{ scale: 1.2, color: "#22c55e" }}
                   animate={{ scale: 1, color: "#ffffff" }}
-                  className="text-lg font-black leading-none"
+                  className="text-3xl font-display font-normal leading-none"
                 >
                   {transpose > 0 ? `+${transpose}` : transpose}
                 </motion.span>
-                <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
                   Steps
                 </span>
               </div>
@@ -475,31 +543,13 @@ export default function TabDetail({
 
         {/* Tab Content */}
         <div className="relative group">
-          {!isPlayMode && (
-            <div className="absolute -top-3 -left-3 px-3 py-1 bg-primary text-black text-[10px] font-black rounded-md z-10 shadow-lg">
-              BASS TAB
-            </div>
-          )}
+          <div className="absolute -top-3 -left-3 px-3 py-1 bg-primary text-black text-[10px] font-black rounded-md z-10 shadow-lg">
+            BASS TAB
+          </div>
           <div
             ref={scrollRef}
-            className={cn(
-              "bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col",
-              isPlayMode
-                ? "fixed top-0 left-0 w-full h-[100dvh] z-[60] p-6 md:p-20 items-start md:items-center bg-background"
-                : "p-8 rounded-3xl",
-            )}
+            className="bg-surface border border-border overflow-auto shadow-2xl relative transition-all duration-500 flex-1 flex flex-col p-8 rounded-3xl"
           >
-            {isPlayMode && (
-              <div className="mb-8 md:mb-12 text-center w-full">
-                <h1 className="text-2xl md:text-4xl font-black mb-2 uppercase tracking-tight">
-                  {tab.title}
-                </h1>
-                <p className="text-lg md:text-xl text-muted-foreground font-medium">
-                  {tab.artist} •{" "}
-                  <span className="text-primary">{currentKey}</span>
-                </p>
-              </div>
-            )}
             <pre
               className="font-mono leading-relaxed whitespace-pre select-text transition-all duration-300"
               style={{ fontSize: `${fontSize}px` }}

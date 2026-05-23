@@ -771,7 +771,7 @@ function AppContent() {
                 >
                   <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="lg:hidden absolute top-4 left-4 p-2 bg-surface/50 backdrop-blur-md border border-border rounded-xl text-foreground hover:bg-surface/80 hover:border-primary/50 transition-all shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="lg:hidden absolute top-4 left-4 p-2 bg-card/50 backdrop-blur-md border border-border rounded-xl text-foreground hover:bg-card/80 hover:border-primary/50 transition-all shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     <Menu className="w-5 h-5" />
                   </button>
@@ -779,7 +779,7 @@ function AppContent() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="w-24 h-24 mb-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.15)]"
+                    className="w-24 h-24 mb-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shadow-[0_0_30px_rgba(124,58,237,0.3)]"
                   >
                     <svg
                       className="w-12 h-12 text-primary drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]"
@@ -799,7 +799,7 @@ function AppContent() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="text-2xl font-black text-foreground mb-3 tracking-tight text-center"
+                    className="text-4xl font-display font-normal text-foreground mb-3 tracking-wide text-center"
                   >
                     Nothing selected
                   </motion.h3>
@@ -820,7 +820,7 @@ function AppContent() {
                   >
                     <button
                       onClick={() => setIsSidebarOpen(true)}
-                      className="lg:hidden w-full sm:flex-1 px-6 py-4 bg-surface/30 backdrop-blur-sm border border-border text-foreground rounded-xl font-bold hover:bg-surface/50 hover:border-primary/50 transition-all text-center group min-h-[44px]"
+                      className="lg:hidden w-full sm:flex-1 px-6 py-4 bg-card/30 backdrop-blur-sm border border-border text-foreground rounded-xl font-bold hover:bg-card/50 hover:border-primary/50 transition-all text-center group min-h-[44px]"
                     >
                       <span className="group-hover:text-primary transition-colors">
                         Browse Collection

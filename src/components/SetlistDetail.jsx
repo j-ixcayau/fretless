@@ -93,14 +93,14 @@ export default function SetlistDetail({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-3xl font-display font-normal text-primary tracking-wide">
                   {setlist.name || "Untitled Setlist"}
                 </h2>
                 <button
                   onClick={() => setIsEditing(true)}
                   className="p-1 text-muted-foreground hover:text-primary rounded-md"
                 >
-                  <Edit3 className="w-3 h-3" />
+                  <Edit3 className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -135,8 +135,8 @@ export default function SetlistDetail({
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full flex flex-col gap-8">
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
               Songs in Setlist
             </h3>
             <button
@@ -174,16 +174,18 @@ export default function SetlistDetail({
               tabsInSetlist.map((tab, idx) => (
                 <div
                   key={tab.id}
-                  className="flex items-center justify-between p-3 md:p-4 bg-surface border border-border rounded-xl group hover:border-primary/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-4 md:p-6 bg-card border border-border rounded-2xl group hover:border-primary/50 transition-colors cursor-pointer mb-2"
                   onClick={() => onPlay(idx)}
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <span className="text-xl font-black text-muted-foreground/30 w-6 text-center">
+                    <span className="text-2xl font-display font-normal text-muted-foreground/30 w-8 text-center">
                       {idx + 1}
                     </span>
                     <div>
-                      <h4 className="font-bold">{tab.title}</h4>
-                      <p className="text-xs text-muted-foreground">
+                      <h4 className="text-xl font-display font-normal tracking-wide">
+                        {tab.title}
+                      </h4>
+                      <p className="text-sm text-secondary font-medium tracking-wide">
                         {tab.artist}
                       </p>
                     </div>
@@ -222,8 +224,8 @@ export default function SetlistDetail({
               exit={{ opacity: 0, height: 0 }}
               className="border-t border-border pt-8 overflow-hidden flex flex-col"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
                   Available Songs
                 </h3>
                 <div className="relative w-full sm:w-64">
@@ -241,11 +243,13 @@ export default function SetlistDetail({
                 {availableTabs.map((tab) => (
                   <div
                     key={tab.id}
-                    className="flex items-center justify-between p-3 bg-surface/50 border border-border rounded-xl hover:bg-surface transition-colors"
+                    className="flex items-center justify-between p-4 bg-card/50 border border-border rounded-2xl hover:bg-card transition-colors"
                   >
                     <div>
-                      <h4 className="font-bold text-sm">{tab.title}</h4>
-                      <p className="text-xs text-muted-foreground">
+                      <h4 className="font-display font-normal tracking-wide text-lg">
+                        {tab.title}
+                      </h4>
+                      <p className="text-sm text-secondary font-medium tracking-wide">
                         {tab.artist}
                       </p>
                     </div>

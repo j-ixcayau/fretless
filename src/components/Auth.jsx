@@ -7,20 +7,32 @@ export default function Auth() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+      {/* Aurora mesh gradient background */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden flex items-center justify-center">
+        <div
+          className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-primary/40 rounded-full blur-[120px] mix-blend-screen opacity-80 animate-pulse"
+          style={{ animationDuration: "12s" }}
+        />
+        <div
+          className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-secondary/30 rounded-full blur-[120px] mix-blend-screen opacity-80 animate-pulse"
+          style={{ animationDuration: "15s", animationDelay: "2s" }}
+        />
+        <div
+          className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] bg-indigo-500/20 rounded-full blur-[100px] mix-blend-screen opacity-60 animate-pulse"
+          style={{ animationDuration: "10s", animationDelay: "1s" }}
+        />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="z-10 w-full max-w-md bg-surface border border-border p-8 rounded-2xl shadow-2xl text-center"
+        className="z-10 w-full max-w-md bg-card/50 backdrop-blur-3xl border border-white/10 p-10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] text-center relative overflow-hidden"
       >
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-background border border-border mb-8 shadow-inner">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-secondary mb-8 shadow-[0_0_30px_rgba(124,58,237,0.5)] relative z-10">
           <svg
-            className="w-10 h-10 text-primary"
+            className="w-12 h-12 text-white drop-shadow-md"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -34,10 +46,10 @@ export default function Auth() {
           </svg>
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight mb-3 font-sans">
-          BASS<span className="text-primary">TABS</span>
+        <h1 className="text-5xl font-normal tracking-wider mb-4 font-display text-foreground relative z-10">
+          BASS<span className="text-secondary">TABS</span>
         </h1>
-        <p className="text-muted-foreground mb-10">
+        <p className="text-muted-foreground/80 font-medium text-lg mb-10 tracking-wide relative z-10">
           Professional tab management and real-time transposition for bassists.
         </p>
 
