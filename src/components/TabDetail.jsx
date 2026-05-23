@@ -251,7 +251,7 @@ export default function TabDetail({
 
   const playModePortal = isPlayMode
     ? createPortal(
-        <div className="absolute top-0 left-0 w-full min-h-screen z-[200] bg-background">
+        <div className="w-full min-h-screen bg-background relative z-[200]">
           <AnimatePresence>
             {showControls && (
               <motion.div

@@ -105,11 +105,12 @@ textarea {
 
 body.play-mode-active {
   overflow: visible !important;
+  background-color: var(--background);
 }
 
-body.play-mode-active #root,
-body.play-mode-active #root > div {
-  height: auto !important;
-  min-height: 100vh;
-  overflow: visible !important;
+body.play-mode-active #root {
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  visibility: hidden !important;
 }
