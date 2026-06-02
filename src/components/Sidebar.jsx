@@ -113,29 +113,33 @@ export default function Sidebar({
               <>
                 <button
                   onClick={onSmartImport}
-                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group"
+                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Smart Import"
+                  aria-label="Smart Import"
                 >
                   <Wand2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onImportJSON}
-                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group"
+                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all group min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Import from JSON"
+                  aria-label="Import from JSON"
                 >
                   <Code className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onExportAll}
-                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all"
+                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Export all tabs to JSON"
+                  aria-label="Export all tabs"
                 >
                   <Download className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onCreateNew}
-                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all"
+                  className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Create New Tab"
+                  aria-label="Create New Tab"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -143,8 +147,9 @@ export default function Sidebar({
             ) : (
               <button
                 onClick={onCreateSetlist}
-                className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all"
+                className="p-1.5 hover:bg-primary/10 rounded-lg text-primary transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Create New Setlist"
+                aria-label="Create New Setlist"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -256,15 +261,17 @@ export default function Sidebar({
           <div className="flex items-center gap-1">
             <button
               onClick={onOpenSettings}
-              className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
+              className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10 min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Settings"
+              aria-label="Settings"
             >
               <Settings className="w-5 h-5" />
             </button>
             <button
               onClick={logout}
-              className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+              className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10 min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="w-5 h-5" />
             </button>

@@ -64,13 +64,15 @@ export default function SetlistDetail({
         <div className="flex items-center gap-3 md:gap-4 w-full">
           <button
             onClick={onMenu}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Show sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
           <button
             onClick={onBack}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Back to list"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -86,7 +88,8 @@ export default function SetlistDetail({
                 />
                 <button
                   onClick={handleSaveName}
-                  className="p-2 text-primary hover:bg-primary/10 rounded-lg"
+                  className="p-2 text-primary hover:bg-primary/10 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label="Save Name"
                 >
                   <Save className="w-4 h-4" />
                 </button>
@@ -98,7 +101,8 @@ export default function SetlistDetail({
                 </h2>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-1 text-muted-foreground hover:text-primary rounded-md"
+                  className="p-1 text-muted-foreground hover:text-primary rounded-md min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label="Edit Name"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
@@ -109,9 +113,9 @@ export default function SetlistDetail({
           {tabsInSetlist.length > 0 && (
             <button
               onClick={() => onPlay(0)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-bold hover:bg-accent/90 hover:scale-[1.02] active:scale-[0.97] transition-all shadow-lg min-h-[44px]"
             >
-              <Play className="w-4 h-4 fill-black" />
+              <Play className="w-4 h-4 fill-current" />
               <span className="hidden sm:inline">Play Setlist</span>
             </button>
           )}
@@ -126,7 +130,8 @@ export default function SetlistDetail({
                 onDelete();
               }
             }}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10"
+            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Delete Setlist"
           >
             <Trash2 className="w-5 h-5" />
           </button>
@@ -142,7 +147,7 @@ export default function SetlistDetail({
             <button
               onClick={() => setIsAddingMode(!isAddingMode)}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors",
+                "flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors min-h-[44px]",
                 isAddingMode
                   ? "bg-primary/20 text-primary"
                   : "bg-surface border border-border hover:bg-muted",
@@ -196,15 +201,17 @@ export default function SetlistDetail({
                   >
                     <button
                       onClick={() => onPlay(idx)}
-                      className="p-2.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-primary/20 hover:text-primary rounded-lg transition-all text-primary md:text-foreground"
+                      className="p-2.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-accent/20 hover:text-accent rounded-lg transition-all text-accent md:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title="Play Song"
+                      aria-label="Play Song"
                     >
                       <Play className="w-5 h-5 md:w-4 md:h-4" />
                     </button>
                     <button
                       onClick={() => removeTabFromSetlist(tab.id)}
-                      className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                      className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title="Remove from Setlist"
+                      aria-label="Remove from Setlist"
                     >
                       <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
                     </button>

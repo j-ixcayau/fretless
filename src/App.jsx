@@ -364,6 +364,7 @@ function AppContent() {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 20, stiffness: 90 }}
               className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
             >
               <div className="p-6 border-b border-border flex items-center justify-between">
@@ -380,7 +381,8 @@ function AppContent() {
                 </div>
                 <button
                   onClick={() => setIsImporting(false)}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  aria-label="Close"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -443,6 +445,7 @@ function AppContent() {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 20, stiffness: 90 }}
               className="bg-surface border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
               <div className="p-6 border-b border-border flex items-center justify-between">
@@ -460,7 +463,8 @@ function AppContent() {
                 <button
                   onClick={() => setIsSmartImporting(false)}
                   disabled={isSmartImportLoading}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  aria-label="Close"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -582,6 +586,7 @@ function AppContent() {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 20, stiffness: 90 }}
               className="bg-surface border border-border w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
               <div className="p-6 border-b border-border flex items-center justify-between">
@@ -598,7 +603,8 @@ function AppContent() {
                 </div>
                 <button
                   onClick={() => setIsSettingsOpen(false)}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  aria-label="Close"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -771,6 +777,7 @@ function AppContent() {
                 >
                   <button
                     onClick={() => setIsSidebarOpen(true)}
+                    aria-label="Open Menu"
                     className="lg:hidden absolute top-4 left-4 p-2 bg-card/50 backdrop-blur-md border border-border rounded-xl text-foreground hover:bg-card/80 hover:border-primary/50 transition-all shadow-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     <Menu className="w-5 h-5" />
@@ -862,7 +869,8 @@ function AppContent() {
             <span className="font-bold text-sm">{toast.message}</span>
             <button
               onClick={() => setToast(null)}
-              className="ml-2 hover:opacity-70 transition-opacity"
+              aria-label="Dismiss Toast"
+              className="ml-2 hover:opacity-70 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <X className="w-4 h-4" />
             </button>

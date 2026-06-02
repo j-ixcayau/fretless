@@ -18,7 +18,7 @@ export default function Auth() {
           style={{ animationDuration: "15s", animationDelay: "2s" }}
         />
         <div
-          className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] bg-indigo-500/20 rounded-full blur-[100px] mix-blend-screen opacity-60 animate-pulse"
+          className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] bg-accent/20 rounded-full blur-[100px] mix-blend-screen opacity-60 animate-pulse"
           style={{ animationDuration: "10s", animationDelay: "1s" }}
         />
       </div>
@@ -30,7 +30,7 @@ export default function Auth() {
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-secondary mb-8 shadow-[0_0_30px_rgba(124,58,237,0.5)] relative z-10">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-accent mb-8 shadow-[0_0_30px_rgba(124,58,237,0.5)] relative z-10">
           <svg
             className="w-12 h-12 text-white drop-shadow-md"
             viewBox="0 0 24 24"
@@ -55,7 +55,7 @@ export default function Auth() {
 
         <button
           onClick={login}
-          className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-black rounded-xl font-bold hover:bg-neutral-200 transition-all transform active:scale-[0.98] shadow-lg"
+          className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-black rounded-xl font-bold hover:bg-neutral-200 transition-all transform active:scale-[0.97] shadow-lg min-h-[44px]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path

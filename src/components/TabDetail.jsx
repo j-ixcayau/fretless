@@ -279,7 +279,8 @@ export default function TabDetail({
                 <div className="flex items-center gap-2 px-3 py-2 bg-background/50 rounded-xl border border-border">
                   <button
                     onClick={() => setFontSize((s) => Math.max(10, s - 2))}
-                    className="p-1 hover:text-primary"
+                    aria-label="Decrease Font Size"
+                    className="p-1 hover:text-primary min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     -
                   </button>
@@ -288,7 +289,8 @@ export default function TabDetail({
                   </span>
                   <button
                     onClick={() => setFontSize((s) => Math.min(40, s + 2))}
-                    className="p-1 hover:text-primary"
+                    aria-label="Increase Font Size"
+                    className="p-1 hover:text-primary min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     +
                   </button>
@@ -296,7 +298,8 @@ export default function TabDetail({
                 <div className="w-px h-6 bg-border" />
                 <button
                   onClick={togglePlayMode}
-                  className="p-2 bg-primary text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-primary/20"
+                  aria-label="Close Play Mode"
+                  className="p-2 bg-primary text-primary-foreground rounded-xl hover:scale-110 transition-transform shadow-lg shadow-primary/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -339,21 +342,23 @@ export default function TabDetail({
         <div className="flex items-center gap-3 md:gap-4">
           <button
             onClick={onMenu}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Show sidebar"
+            aria-label="Show sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
           <button
             onClick={onBack}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Back to list"
+            aria-label="Back to list"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
             onClick={onEdit}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.97] transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] min-h-[44px]"
           >
             <Edit3 className="w-4 h-4" />
             <span className="hidden sm:inline">Edit Tab</span>
@@ -362,13 +367,13 @@ export default function TabDetail({
           <div className="h-6 w-px bg-border" />
           <button
             onClick={togglePlayMode}
-            className="flex items-center gap-2 px-4 py-2 bg-surface/50 backdrop-blur-sm border border-border rounded-xl font-bold hover:bg-surface hover:border-primary/50 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            className="flex items-center gap-2 px-4 py-2 bg-surface/50 backdrop-blur-sm border border-border rounded-xl font-bold hover:bg-surface hover:border-accent/50 hover:scale-[1.02] active:scale-[0.97] transition-all group min-h-[44px]"
           >
-            <Play className="w-4 h-4 text-primary fill-primary/20 group-hover:fill-primary transition-colors" />
-            <span className="hidden sm:inline text-foreground group-hover:text-primary transition-colors">
+            <Play className="w-4 h-4 text-accent fill-accent/20 group-hover:fill-accent transition-colors" />
+            <span className="hidden sm:inline text-foreground group-hover:text-accent transition-colors">
               Play Mode
             </span>
-            <span className="sm:hidden text-foreground group-hover:text-primary transition-colors">
+            <span className="sm:hidden text-foreground group-hover:text-accent transition-colors">
               Play
             </span>
           </button>
@@ -473,6 +478,7 @@ export default function TabDetail({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleTranspose(-1)}
+                aria-label="Transpose Down"
                 className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border hover:border-primary transition-colors min-w-[44px] min-h-[44px]"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -494,6 +500,7 @@ export default function TabDetail({
 
               <button
                 onClick={() => handleTranspose(1)}
+                aria-label="Transpose Up"
                 className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border hover:border-primary transition-colors min-w-[44px] min-h-[44px]"
               >
                 <ChevronRight className="w-5 h-5" />
