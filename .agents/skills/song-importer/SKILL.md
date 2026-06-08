@@ -56,3 +56,4 @@ When providing the final data for a "New Tab", use this structure:
 - **Language**: Support both English (`[Chorus]`) and Spanish (`[Estribillo]`) section headers based on the input.
 - **Case Formatting**: Prefer Sentence Case (e.g., "Lyrics go here") over ALL CAPS, even if the source is capitalized, to improve readability in the app.
 - **Duration**: The `duration` field is an **integer in seconds** (e.g., `210` for 3:30). Estimate from the song length if not explicitly known. The `TabEditor` stores and displays this as a numeric input labelled "Duration (s)".
+- **Mobile Optimization**: Break down long lines of lyrics into shorter phrases (maximum 30-40 characters per line) so they are readable on mobile screens without horizontal scrolling. Avoid large horizontal spacing or tabs between sentences. Maintain correct chord alignment above each shorter phrase.
