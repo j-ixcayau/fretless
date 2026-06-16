@@ -251,7 +251,7 @@ export default function TabDetail({
 
   const playModePortal = isPlayMode
     ? createPortal(
-        <div className="w-full min-h-screen bg-background relative z-[200]">
+        <div className="w-full min-h-[100dvh] bg-background relative z-[200]">
           <AnimatePresence>
             {showControls && (
               <motion.div
@@ -307,7 +307,7 @@ export default function TabDetail({
             )}
           </AnimatePresence>
 
-          <div className="p-6 md:p-20 flex flex-col items-start md:items-center max-w-5xl mx-auto w-full min-h-screen relative">
+          <div className="p-6 md:p-20 flex flex-col items-start md:items-center max-w-5xl mx-auto w-full min-h-[100dvh] relative">
             <div className="mb-8 md:mb-12 text-center w-full">
               <h1 className="text-4xl md:text-6xl font-display font-normal uppercase tracking-wide text-primary mb-4">
                 {tab.title}
@@ -395,8 +395,9 @@ export default function TabDetail({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="p-4 md:p-6 max-w-5xl xl:max-w-7xl 2xl:max-w-none mx-auto w-full flex flex-col">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
           <div className="flex-1">
             <div className="flex flex-wrap gap-1.5 mb-2">
               {tab.tags?.map((tag) => (
@@ -580,6 +581,7 @@ export default function TabDetail({
             Last Edited:{" "}
             {tab.updated_at?.toDate?.().toLocaleDateString() || "Never"}
           </span>
+        </div>
         </div>
       </div>
     </div>
