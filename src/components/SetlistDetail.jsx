@@ -203,9 +203,10 @@ export default function SetlistDetail({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-5xl mx-auto w-full flex flex-col gap-8">
-        <div>
-          <div className="flex items-center justify-between mb-6">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="p-4 md:p-8 max-w-5xl mx-auto w-full flex flex-col gap-8">
+          <div>
+            <div className="flex items-center justify-between mb-6">
             <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
               Songs in Setlist
             </h3>
@@ -226,6 +227,64 @@ export default function SetlistDetail({
               {isAddingMode ? "Done" : "Add Songs"}
             </button>
           </div>
+
+          {/* Add Songs Mode */}
+          <AnimatePresence>
+            {isAddingMode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-b border-border pb-8 mb-8 overflow-hidden flex flex-col"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
+                    Available Songs
+                  </h3>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={addSearchQuery}
+                      onChange={(e) => setAddSearchQuery(e.target.value)}
+                      placeholder="Search songs..."
+                      className="w-full pl-9 pr-4 py-2 bg-surface/50 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-1 pr-2">
+                  {availableTabs.map((tab) => (
+                    <div
+                      key={tab.id}
+                      className="flex items-center justify-between p-4 bg-card/50 border border-border rounded-2xl hover:bg-card transition-colors"
+                    >
+                      <div>
+                        <h4 className="font-display font-normal tracking-wide text-lg">
+                          {tab.title}
+                        </h4>
+                        <p className="text-sm text-secondary font-medium tracking-wide">
+                          {tab.artist}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => addTabToSetlist(tab.id)}
+                        className="p-2 hover:bg-primary/20 text-primary rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
+                        <Plus className="w-5 h-5 md:w-4 md:h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {availableTabs.length === 0 && (
+                    <p className="text-muted-foreground text-sm p-8 col-span-1 md:col-span-2 text-center bg-surface/30 rounded-xl border border-dashed border-border">
+                      {addSearchQuery
+                        ? "No songs match your search."
+                        : "No more songs available to add."}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="space-y-2">
             {tabsInSetlist.length === 0 ? (
@@ -261,63 +320,7 @@ export default function SetlistDetail({
           </div>
         </div>
 
-        {/* Add Songs Mode */}
-        <AnimatePresence>
-          {isAddingMode && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border-t border-border pt-8 overflow-hidden flex flex-col"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
-                  Available Songs
-                </h3>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={addSearchQuery}
-                    onChange={(e) => setAddSearchQuery(e.target.value)}
-                    placeholder="Search songs..."
-                    className="w-full pl-9 pr-4 py-2 bg-surface/50 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto p-1 pr-2 scrollbar-thin">
-                {availableTabs.map((tab) => (
-                  <div
-                    key={tab.id}
-                    className="flex items-center justify-between p-4 bg-card/50 border border-border rounded-2xl hover:bg-card transition-colors"
-                  >
-                    <div>
-                      <h4 className="font-display font-normal tracking-wide text-lg">
-                        {tab.title}
-                      </h4>
-                      <p className="text-sm text-secondary font-medium tracking-wide">
-                        {tab.artist}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => addTabToSetlist(tab.id)}
-                      className="p-2 hover:bg-primary/20 text-primary rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    >
-                      <Plus className="w-5 h-5 md:w-4 md:h-4" />
-                    </button>
-                  </div>
-                ))}
-                {availableTabs.length === 0 && (
-                  <p className="text-muted-foreground text-sm p-8 col-span-1 md:col-span-2 text-center bg-surface/30 rounded-xl border border-dashed border-border">
-                    {addSearchQuery
-                      ? "No songs match your search."
-                      : "No more songs available to add."}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </div>
     </div>
   );
