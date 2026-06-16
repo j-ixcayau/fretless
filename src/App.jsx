@@ -323,7 +323,7 @@ function AppContent() {
     try {
       const tabData = await analyzeSong(smartImportText, smartImportFile);
       const newTab = await addTab(tabData);
-      showToast("Song imported successfully!");
+      showToast(`${tabData.title || "Song"} imported successfully!`);
       if (newTab) navigate(`/tabs/${newTab.id}`);
       setIsSmartImporting(false);
       setSmartImportText("");
@@ -656,7 +656,7 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-[100dvh] overflow-hidden bg-background">
         {/* Sidebar Drawer */}
         <div
           className={cn(

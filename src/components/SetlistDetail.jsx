@@ -9,9 +9,61 @@ import {
   Play,
   Menu,
   Search,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
+
+function SortableSetlistItem({ tab, idx, onPlay, onRemove }) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={tab}
+      dragListener={false}
+      dragControls={dragControls}
+      className="flex items-center justify-between p-4 md:p-6 bg-card border border-border rounded-2xl group transition-colors mb-2"
+    >
+      <div className="flex items-center gap-4 flex-1">
+        <div
+          className="cursor-grab active:cursor-grabbing p-2 -ml-2 text-muted-foreground hover:text-primary transition-colors touch-none"
+          onPointerDown={(e) => dragControls.start(e)}
+        >
+          <GripVertical className="w-5 h-5 md:w-4 md:h-4" />
+        </div>
+        <span className="text-2xl font-display font-normal text-muted-foreground/30 w-8 text-center">
+          {idx + 1}
+        </span>
+        <div>
+          <h4 className="text-xl font-display font-normal tracking-wide">
+            {tab.title}
+          </h4>
+          <p className="text-sm text-secondary font-medium tracking-wide">
+            {tab.artist}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPlay(idx)}
+          className="p-2.5 hover:bg-accent/20 hover:text-accent rounded-lg transition-all text-accent md:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
+          title="Play Song"
+          aria-label="Play Song"
+        >
+          <Play className="w-5 h-5 md:w-4 md:h-4" />
+        </button>
+        <button
+          onClick={() => onRemove(tab.id)}
+          className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+          title="Remove from Setlist"
+          aria-label="Remove from Setlist"
+        >
+          <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
+        </button>
+      </div>
+    </Reorder.Item>
+  );
+}
 
 export default function SetlistDetail({
   setlist,
@@ -27,9 +79,17 @@ export default function SetlistDetail({
   const [isAddingMode, setIsAddingMode] = useState(false);
   const [addSearchQuery, setAddSearchQuery] = useState("");
 
-  const tabsInSetlist = (setlist.tabs || [])
-    .map((tabId) => allTabs.find((t) => t.id === tabId))
-    .filter(Boolean);
+  const tabsInSetlist = useMemo(() => {
+    return (setlist.tabs || [])
+      .map((tabId) => allTabs.find((t) => t.id === tabId))
+      .filter(Boolean);
+  }, [setlist.tabs, allTabs]);
+
+  const [localTabs, setLocalTabs] = useState(tabsInSetlist);
+
+  React.useEffect(() => {
+    setLocalTabs(tabsInSetlist);
+  }, [tabsInSetlist]);
 
   const availableTabs = useMemo(() => {
     let tabs = allTabs.filter((t) => !(setlist.tabs || []).includes(t.id));
@@ -56,6 +116,11 @@ export default function SetlistDetail({
 
   const removeTabFromSetlist = (tabId) => {
     onUpdate({ tabs: (setlist.tabs || []).filter((id) => id !== tabId) });
+  };
+
+  const handleReorder = (newOrder) => {
+    setLocalTabs(newOrder);
+    onUpdate({ tabs: newOrder.map((t) => t.id) });
   };
 
   return (
@@ -176,48 +241,22 @@ export default function SetlistDetail({
                 </button>
               </div>
             ) : (
-              tabsInSetlist.map((tab, idx) => (
-                <div
-                  key={tab.id}
-                  className="flex items-center justify-between p-4 md:p-6 bg-card border border-border rounded-2xl group hover:border-primary/50 transition-colors cursor-pointer mb-2"
-                  onClick={() => onPlay(idx)}
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    <span className="text-2xl font-display font-normal text-muted-foreground/30 w-8 text-center">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <h4 className="text-xl font-display font-normal tracking-wide">
-                        {tab.title}
-                      </h4>
-                      <p className="text-sm text-secondary font-medium tracking-wide">
-                        {tab.artist}
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className="flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => onPlay(idx)}
-                      className="p-2.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-accent/20 hover:text-accent rounded-lg transition-all text-accent md:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      title="Play Song"
-                      aria-label="Play Song"
-                    >
-                      <Play className="w-5 h-5 md:w-4 md:h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeTabFromSetlist(tab.id)}
-                      className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-                      title="Remove from Setlist"
-                      aria-label="Remove from Setlist"
-                    >
-                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
+              <Reorder.Group
+                axis="y"
+                values={localTabs}
+                onReorder={handleReorder}
+                className="space-y-2"
+              >
+                {localTabs.map((tab, idx) => (
+                  <SortableSetlistItem
+                    key={tab.id}
+                    tab={tab}
+                    idx={idx}
+                    onPlay={onPlay}
+                    onRemove={removeTabFromSetlist}
+                  />
+                ))}
+              </Reorder.Group>
             )}
           </div>
         </div>
