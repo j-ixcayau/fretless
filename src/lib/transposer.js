@@ -110,11 +110,17 @@ export function transposeTab(content, semitones, preferSharps = true) {
 export function getInterval(fromNote, toNote) {
   if (!fromNote || !toNote) return 0;
 
-  let fromIndex = NOTES_SHARP.indexOf(fromNote);
-  if (fromIndex === -1) fromIndex = NOTES_FLAT.indexOf(fromNote);
+  // Strip any trailing chord quality (e.g. "Bm" -> "B", "Cmaj7" -> "C") so
+  // keys like minor chords still resolve to a root note.
+  const fromRoot = fromNote.match(/^[A-G][#b]?/)?.[0];
+  const toRoot = toNote.match(/^[A-G][#b]?/)?.[0];
+  if (!fromRoot || !toRoot) return 0;
 
-  let toIndex = NOTES_SHARP.indexOf(toNote);
-  if (toIndex === -1) toIndex = NOTES_FLAT.indexOf(toNote);
+  let fromIndex = NOTES_SHARP.indexOf(fromRoot);
+  if (fromIndex === -1) fromIndex = NOTES_FLAT.indexOf(fromRoot);
+
+  let toIndex = NOTES_SHARP.indexOf(toRoot);
+  if (toIndex === -1) toIndex = NOTES_FLAT.indexOf(toRoot);
 
   if (fromIndex === -1 || toIndex === -1) return 0;
 

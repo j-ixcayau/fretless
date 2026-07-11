@@ -12,29 +12,37 @@ import {
 import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
 
+function tabToFormData(tab) {
+  return {
+    title: tab?.title || "",
+    artist: tab?.artist || "",
+    base_key: tab?.base_key || "E",
+    preferred_key: tab?.preferred_key || "",
+    tuning: tab?.tuning || "Standard",
+    tags: tab?.tags ? tab.tags.join(", ") : "",
+    duration: tab?.duration || "",
+    content: tab?.content || "",
+  };
+}
+
 export default function TabEditor({ tab, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    artist: "",
-    base_key: "E",
-    preferred_key: "",
-    tuning: "Standard",
-    tags: "",
-    duration: "",
-    content: "",
-    ...tab,
-  });
+  const [formData, setFormData] = useState(() => tabToFormData(tab));
 
   const [showCheatsheet, setShowCheatsheet] = useState(false);
   const [viewMode, setViewMode] = useState("edit"); // 'edit', 'split', 'preview'
   const [saveStatus, setSaveStatus] = useState("idle"); // 'idle', 'saving', 'saved'
 
   const textareaRef = useRef(null);
+  // Tracks whether formData has been populated from real tab data yet, so we
+  // don't clobber in-progress edits once the initial sync has happened.
+  const hasSyncedTab = useRef(!!tab);
 
-  // Convert tags array to string for editing
+  // Sync form fields once the tab data arrives (it may not be available yet
+  // on mount, e.g. right after a page refresh while Firestore is still loading).
   useEffect(() => {
-    if (tab?.tags) {
-      setFormData((prev) => ({ ...prev, tags: tab.tags.join(", ") }));
+    if (tab && !hasSyncedTab.current) {
+      setFormData(tabToFormData(tab));
+      hasSyncedTab.current = true;
     }
   }, [tab]);
 
