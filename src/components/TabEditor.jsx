@@ -94,7 +94,7 @@ b : Bend
   `.trim();
 
   return (
-    <div className="flex flex-col flex-1 bg-background min-h-0">
+    <div className="flex flex-col h-full bg-background min-h-0">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ b : Bend
           </div>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary-hover transition-colors"
           >
             <Save className="w-4 h-4" />
             <span>Save</span>
@@ -340,7 +340,7 @@ b : Bend
 D |----------------|
 A |----------------|
 E |----------------|"
-              className="flex-1 w-full h-full p-6 bg-surface border border-border rounded-2xl focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm resize-none leading-relaxed overflow-y-auto"
+              className="flex-1 w-full min-h-0 p-6 bg-surface border border-border rounded-2xl focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm resize-none leading-relaxed overflow-y-auto"
             />
           </div>
         </div>

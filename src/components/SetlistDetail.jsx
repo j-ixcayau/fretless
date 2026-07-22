@@ -1,20 +1,26 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
-  ArrowLeft,
+  ChevronLeft,
   Trash2,
-  Edit3,
-  Save,
+  Check,
   X,
   Plus,
   Play,
-  Menu,
   Search,
   GripVertical,
+  Pencil,
 } from "lucide-react";
-import { cn } from "../lib/utils";
-import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  Reorder,
+  useDragControls,
+} from "framer-motion";
+import IconButton from "./ui/IconButton";
+import KeyBadge from "./ui/KeyBadge";
+import { useConfirm } from "./ui/ConfirmDialog";
 
-function SortableSetlistItem({ tab, idx, onPlay, onRemove }) {
+function SetlistRow({ tab, idx, onPlay, onRemove }) {
   const dragControls = useDragControls();
 
   return (
@@ -22,45 +28,41 @@ function SortableSetlistItem({ tab, idx, onPlay, onRemove }) {
       value={tab}
       dragListener={false}
       dragControls={dragControls}
-      className="flex items-center justify-between p-4 md:p-6 bg-card border border-border rounded-2xl group transition-colors mb-2"
+      className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] bg-surface border border-border"
     >
-      <div className="flex items-center gap-4 flex-1">
-        <div
-          className="cursor-grab active:cursor-grabbing p-2 -ml-2 text-muted-foreground hover:text-primary transition-colors touch-none"
-          onPointerDown={(e) => dragControls.start(e)}
-        >
-          <GripVertical className="w-5 h-5 md:w-4 md:h-4" />
+      <button
+        className="cursor-grab active:cursor-grabbing text-[#4a4770] hover:text-icon-foreground transition-colors touch-none shrink-0"
+        onPointerDown={(e) => dragControls.start(e)}
+        aria-label="Drag to reorder"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <span className="text-[13px] font-bold text-muted-foreground-2 w-4 text-center shrink-0">
+        {idx + 1}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[14px] font-bold text-foreground truncate leading-tight">
+          {tab.title}
         </div>
-        <span className="text-2xl font-display font-normal text-muted-foreground/30 w-8 text-center">
-          {idx + 1}
-        </span>
-        <div>
-          <h4 className="text-xl font-display font-normal tracking-wide">
-            {tab.title}
-          </h4>
-          <p className="text-sm text-secondary font-medium tracking-wide">
-            {tab.artist}
-          </p>
+        <div className="text-[11px] text-muted-foreground truncate">
+          {tab.artist}
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onPlay(idx)}
-          className="p-2.5 hover:bg-accent/20 hover:text-accent rounded-lg transition-all text-accent md:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
-          title="Play Song"
-          aria-label="Play Song"
-        >
-          <Play className="w-5 h-5 md:w-4 md:h-4" />
-        </button>
-        <button
-          onClick={() => onRemove(tab.id)}
-          className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-          title="Remove from Setlist"
-          aria-label="Remove from Setlist"
-        >
-          <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
-        </button>
-      </div>
+      {tab.base_key && <KeyBadge musicKey={tab.base_key} />}
+      <button
+        onClick={() => onPlay(idx)}
+        aria-label="Play song"
+        className="text-muted-foreground-2 hover:text-secondary transition-colors shrink-0 p-1"
+      >
+        <Play className="w-4 h-4 fill-current" />
+      </button>
+      <button
+        onClick={() => onRemove(tab.id)}
+        aria-label="Remove from setlist"
+        className="text-muted-foreground-2 hover:text-destructive transition-colors shrink-0 p-1"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </Reorder.Item>
   );
 }
@@ -71,255 +73,245 @@ export default function SetlistDetail({
   onUpdate,
   onDelete,
   onBack,
-  onMenu,
   onPlay,
 }) {
+  const confirm = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(setlist.name || "Untitled Setlist");
-  const [isAddingMode, setIsAddingMode] = useState(false);
-  const [addSearchQuery, setAddSearchQuery] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
 
-  const tabsInSetlist = useMemo(() => {
-    return (setlist.tabs || [])
-      .map((tabId) => allTabs.find((t) => t.id === tabId))
-      .filter(Boolean);
-  }, [setlist.tabs, allTabs]);
+  const tabsInSetlist = useMemo(
+    () =>
+      (setlist.tabs || [])
+        .map((tabId) => allTabs.find((t) => t.id === tabId))
+        .filter(Boolean),
+    [setlist.tabs, allTabs],
+  );
 
+  // Local copy for optimistic drag-reordering. Re-sync during render (rather
+  // than in an effect) whenever the underlying setlist order changes.
   const [localTabs, setLocalTabs] = useState(tabsInSetlist);
-
-  React.useEffect(() => {
+  const orderKey = (setlist.tabs || []).join(",");
+  const [syncedKey, setSyncedKey] = useState(orderKey);
+  if (orderKey !== syncedKey) {
+    setSyncedKey(orderKey);
     setLocalTabs(tabsInSetlist);
+  }
+
+  const totalMinutes = useMemo(() => {
+    const secs = tabsInSetlist.reduce(
+      (sum, t) => sum + (parseInt(t.duration, 10) || 0),
+      0,
+    );
+    return secs > 0 ? Math.round(secs / 60) : 0;
   }, [tabsInSetlist]);
 
   const availableTabs = useMemo(() => {
-    let tabs = allTabs.filter((t) => !(setlist.tabs || []).includes(t.id));
-    if (addSearchQuery) {
-      const q = addSearchQuery.toLowerCase();
-      tabs = tabs.filter(
+    let list = allTabs.filter((t) => !(setlist.tabs || []).includes(t.id));
+    if (addSearch) {
+      const q = addSearch.toLowerCase();
+      list = list.filter(
         (t) =>
           t.title?.toLowerCase().includes(q) ||
           t.artist?.toLowerCase().includes(q),
       );
     }
-    // Sort A-Z
-    return tabs.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-  }, [allTabs, setlist.tabs, addSearchQuery]);
+    return list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  }, [allTabs, setlist.tabs, addSearch]);
 
-  const handleSaveName = () => {
+  const saveName = () => {
     onUpdate({ name });
     setIsEditing(false);
   };
-
-  const addTabToSetlist = (tabId) => {
-    onUpdate({ tabs: [...(setlist.tabs || []), tabId] });
-  };
-
-  const removeTabFromSetlist = (tabId) => {
+  const addTab = (tabId) => onUpdate({ tabs: [...(setlist.tabs || []), tabId] });
+  const removeTab = (tabId) =>
     onUpdate({ tabs: (setlist.tabs || []).filter((id) => id !== tabId) });
+  const handleReorder = (order) => {
+    setLocalTabs(order);
+    onUpdate({ tabs: order.map((t) => t.id) });
   };
 
-  const handleReorder = (newOrder) => {
-    setLocalTabs(newOrder);
-    onUpdate({ tabs: newOrder.map((t) => t.id) });
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: "Delete this setlist?",
+      message: `"${setlist.name || "Untitled"}" will be removed. Your songs stay in the library.`,
+      confirmLabel: "Delete",
+    });
+    if (ok) onDelete();
   };
+
+  const count = tabsInSetlist.length;
+  const subtitle = `${count} ${count === 1 ? "song" : "songs"}${
+    totalMinutes ? ` · ~${totalMinutes} min` : ""
+  }`;
 
   return (
-    <div className="flex flex-col flex-1 bg-background relative h-full overflow-hidden min-h-0">
-      <div className="flex items-center justify-between p-4 md:p-6 border-b border-border bg-surface/20 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-3 md:gap-4 w-full">
-          <button
-            onClick={onMenu}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Show sidebar"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <button
-            onClick={onBack}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Back to list"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <div className="flex-1">
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-background border border-border px-3 py-1 rounded-md text-foreground font-bold focus:outline-none focus:border-primary"
-                  autoFocus
-                />
-                <button
-                  onClick={handleSaveName}
-                  className="p-2 text-primary hover:bg-primary/10 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  aria-label="Save Name"
-                >
-                  <Save className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <h2 className="text-3xl font-display font-normal text-primary tracking-wide">
-                  {setlist.name || "Untitled Setlist"}
-                </h2>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="p-1 text-muted-foreground hover:text-primary rounded-md min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  aria-label="Edit Name"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {tabsInSetlist.length > 0 && (
+    <div className="flex flex-col h-full bg-background">
+      {/* Header */}
+      <div className="border-b border-[var(--border-chrome)] shrink-0">
+        <div className="flex items-center gap-2.5 px-5 pt-5 pb-3.5 w-full max-w-3xl mx-auto">
+        <IconButton icon={ChevronLeft} label="Back" onClick={onBack} />
+        <div className="flex-1 min-w-0">
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && saveName()}
+                className="flex-1 min-w-0 bg-surface border border-border-chrome rounded-lg px-2.5 py-1 text-[16px] font-extrabold focus:outline-none focus:border-primary/60"
+              />
+              <button
+                onClick={saveName}
+                aria-label="Save name"
+                className="text-secondary p-1"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => onPlay(0)}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg font-bold hover:bg-accent/90 hover:scale-[1.02] active:scale-[0.97] transition-all shadow-lg min-h-[44px]"
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 group text-left max-w-full"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span className="hidden sm:inline">Play Setlist</span>
+              <span className="text-[18px] font-extrabold text-foreground truncate">
+                {setlist.name || "Untitled Setlist"}
+              </span>
+              <Pencil className="w-3 h-3 text-muted-foreground-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
-
-          <div className="h-6 w-px bg-border mx-2" />
-
+          <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+        </div>
+        {count > 0 && (
           <button
-            onClick={() => {
-              if (
-                window.confirm("Are you sure you want to delete this setlist?")
-              ) {
-                onDelete();
-              }
-            }}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-destructive/10 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Delete Setlist"
+            onClick={() => onPlay(0)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-extrabold text-secondary-foreground bg-gradient-to-br from-secondary to-secondary-hover shadow-md shadow-secondary/20 active:scale-[0.98] transition-transform"
           >
-            <Trash2 className="w-5 h-5" />
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Play
           </button>
+        )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto w-full">
-        <div className="p-4 md:p-8 max-w-5xl mx-auto w-full flex flex-col gap-8">
-          <div>
-            <div className="flex items-center justify-between mb-6">
-            <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
-              Songs in Setlist
-            </h3>
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-5 py-4 flex flex-col gap-2 w-full max-w-3xl mx-auto">
+        {count === 0 && !isAdding ? (
+          <div className="flex flex-col items-center text-center py-14 px-6">
+            <p className="text-sm text-muted-foreground mb-4">
+              This setlist is empty.
+            </p>
             <button
-              onClick={() => setIsAddingMode(!isAddingMode)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors min-h-[44px]",
-                isAddingMode
-                  ? "bg-primary/20 text-primary"
-                  : "bg-surface border border-border hover:bg-muted",
-              )}
+              onClick={() => setIsAdding(true)}
+              className="px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-hover transition-colors"
             >
-              {isAddingMode ? (
-                <X className="w-3 h-3" />
-              ) : (
-                <Plus className="w-3 h-3" />
-              )}
-              {isAddingMode ? "Done" : "Add Songs"}
+              Add songs
             </button>
           </div>
+        ) : (
+          <Reorder.Group
+            axis="y"
+            values={localTabs}
+            onReorder={handleReorder}
+            className="flex flex-col gap-2"
+          >
+            {localTabs.map((tab, idx) => (
+              <SetlistRow
+                key={tab.id}
+                tab={tab}
+                idx={idx}
+                onPlay={onPlay}
+                onRemove={removeTab}
+              />
+            ))}
+          </Reorder.Group>
+        )}
 
-          {/* Add Songs Mode */}
-          <AnimatePresence>
-            {isAddingMode && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border-b border-border pb-8 mb-8 overflow-hidden flex flex-col"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-[10px] font-display font-normal text-muted-foreground uppercase tracking-widest">
-                    Available Songs
-                  </h3>
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={addSearchQuery}
-                      onChange={(e) => setAddSearchQuery(e.target.value)}
-                      placeholder="Search songs..."
-                      className="w-full pl-9 pr-4 py-2 bg-surface/50 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-1 pr-2">
-                  {availableTabs.map((tab) => (
-                    <div
-                      key={tab.id}
-                      className="flex items-center justify-between p-4 bg-card/50 border border-border rounded-2xl hover:bg-card transition-colors"
-                    >
-                      <div>
-                        <h4 className="font-display font-normal tracking-wide text-lg">
-                          {tab.title}
-                        </h4>
-                        <p className="text-sm text-secondary font-medium tracking-wide">
-                          {tab.artist}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => addTabToSetlist(tab.id)}
-                        className="p-2 hover:bg-primary/20 text-primary rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      >
-                        <Plus className="w-5 h-5 md:w-4 md:h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {availableTabs.length === 0 && (
-                    <p className="text-muted-foreground text-sm p-8 col-span-1 md:col-span-2 text-center bg-surface/30 rounded-xl border border-dashed border-border">
-                      {addSearchQuery
-                        ? "No songs match your search."
-                        : "No more songs available to add."}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Add song affordance */}
+        {!isAdding && count > 0 && (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex items-center justify-center gap-2 py-3 rounded-[14px] border border-dashed border-border-chrome text-muted-foreground text-[12px] font-bold hover:text-foreground hover:border-primary/40 transition-colors mt-1"
+          >
+            <Plus className="w-4 h-4" />
+            Add song
+          </button>
+        )}
 
-          <div className="space-y-2">
-            {tabsInSetlist.length === 0 ? (
-              <div className="p-8 text-center bg-surface/50 border border-border border-dashed rounded-xl">
-                <p className="text-muted-foreground mb-4">
-                  This setlist is empty.
-                </p>
-                <button
-                  onClick={() => setIsAddingMode(true)}
-                  className="px-4 py-2 bg-primary text-black rounded-lg font-bold text-sm min-h-[44px]"
-                >
-                  Add Songs
-                </button>
-              </div>
-            ) : (
-              <Reorder.Group
-                axis="y"
-                values={localTabs}
-                onReorder={handleReorder}
-                className="space-y-2"
-              >
-                {localTabs.map((tab, idx) => (
-                  <SortableSetlistItem
-                    key={tab.id}
-                    tab={tab}
-                    idx={idx}
-                    onPlay={onPlay}
-                    onRemove={removeTabFromSetlist}
+        {/* Add panel */}
+        <AnimatePresence>
+          {isAdding && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="pt-3 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2">
+                    Add songs
+                  </span>
+                  <button
+                    onClick={() => {
+                      setIsAdding(false);
+                      setAddSearch("");
+                    }}
+                    className="text-[11px] font-bold text-primary"
+                  >
+                    Done
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground-2" />
+                  <input
+                    value={addSearch}
+                    onChange={(e) => setAddSearch(e.target.value)}
+                    placeholder="Search songs…"
+                    className="w-full bg-surface border border-border-chrome rounded-xl py-2.5 pl-10 pr-4 text-sm placeholder:text-muted-foreground-2 focus:outline-none focus:border-primary/60 transition-all"
                   />
-                ))}
-              </Reorder.Group>
-            )}
-          </div>
-        </div>
+                </div>
+                {availableTabs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    {addSearch
+                      ? "No songs match your search."
+                      : "No more songs to add."}
+                  </p>
+                ) : (
+                  availableTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => addTab(tab.id)}
+                      className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] bg-surface border border-border hover:border-primary/40 transition-colors text-left"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] font-bold text-foreground truncate leading-tight">
+                          {tab.title}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {tab.artist}
+                        </div>
+                      </div>
+                      {tab.base_key && <KeyBadge musicKey={tab.base_key} />}
+                      <Plus className="w-4 h-4 text-primary shrink-0" />
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        {/* Delete setlist */}
+        <button
+          onClick={handleDelete}
+          className="flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2 hover:text-destructive transition-colors mt-3 py-2"
+        >
+          <Trash2 className="w-3 h-3" />
+          Delete setlist
+        </button>
         </div>
       </div>
     </div>
