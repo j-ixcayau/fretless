@@ -222,7 +222,12 @@ export default function Sidebar({
                   {setlist.name || "Untitled Setlist"}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {(setlist.tabs || []).length} songs
+                  {
+                    (setlist.tabs || []).filter((tabId) =>
+                      tabs.some((t) => t.id === tabId),
+                    ).length
+                  }{" "}
+                  songs
                 </p>
               </div>
               <ChevronRight

@@ -204,6 +204,48 @@ async function fileToBase64(file) {
   });
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Calls Gemini, retrying transient overload/rate-limit errors (503/429)
+ * with exponential backoff before giving up.
+ */
+async function generateWithRetry(ai, contents, maxRetries = 3) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema,
+          temperature: 0.1,
+        },
+      });
+    } catch (err) {
+      lastError = err;
+      const status = err?.status || err?.error?.code || err?.code;
+      const isTransient = status === 503 || status === 429;
+      if (!isTransient || attempt === maxRetries) break;
+      // 1s, 2s, 4s (+ jitter)
+      await sleep(1000 * 2 ** attempt + Math.random() * 300);
+    }
+  }
+
+  const status = lastError?.status || lastError?.error?.code || lastError?.code;
+  if (status === 503) {
+    throw new Error(
+      "Gemini is overloaded right now. Please wait a moment and try again.",
+    );
+  }
+  if (status === 429) {
+    throw new Error("Rate limit reached. Please wait a bit and try again.");
+  }
+  throw lastError;
+}
+
 /**
  * Analyzes a song from text input and/or an image file,
  * returning a structured JSON object with metadata and formatted content.
@@ -236,16 +278,7 @@ export async function analyzeSong(input, imageFile = null) {
     contents.push(input);
   }
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      responseMimeType: "application/json",
-      responseSchema,
-      temperature: 0.1,
-    },
-  });
+  const response = await generateWithRetry(ai, contents);
 
   if (!response.text) {
     throw new Error("Empty response from Gemini — please try again.");

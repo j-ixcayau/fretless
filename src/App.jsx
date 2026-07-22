@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Routes,
   Route,
@@ -197,9 +197,13 @@ function AppContent() {
     () => localStorage.getItem("geminiApiKey") || "",
   );
 
+  const toastTimerRef = useRef(null);
   const showToast = (message, type = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    // Errors stay longer so they can actually be read.
+    const duration = type === "error" ? 6000 : 3000;
+    toastTimerRef.current = setTimeout(() => setToast(null), duration);
   };
 
   // Keyboard Shortcuts
@@ -256,6 +260,20 @@ function AppContent() {
 
   const handleCreateNew = () => {
     navigate("/tabs/new");
+  };
+
+  // Delete a tab and remove it from any setlist that references it,
+  // so setlist song counts stay accurate.
+  const handleDeleteTab = async (tabId) => {
+    await deleteTab(tabId);
+    const affected = setlists.filter((s) => (s.tabs || []).includes(tabId));
+    await Promise.all(
+      affected.map((s) =>
+        updateSetlist(s.id, {
+          tabs: (s.tabs || []).filter((id) => id !== tabId),
+        }),
+      ),
+    );
   };
 
   const handleCreateSetlist = async () => {
@@ -747,7 +765,7 @@ function AppContent() {
               element={
                 <TabDetailWrapper
                   tabs={tabs}
-                  deleteTab={deleteTab}
+                  deleteTab={handleDeleteTab}
                   updateTab={updateTab}
                   showToast={showToast}
                   setIsSidebarOpen={setIsSidebarOpen}
@@ -855,7 +873,7 @@ function AppContent() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             className={cn(
-              "fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md",
+              "fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md",
               toast.type === "error"
                 ? "bg-red-500/10 border-red-500/50 text-red-500"
                 : "bg-primary/10 border-primary/50 text-primary",
@@ -868,7 +886,10 @@ function AppContent() {
             )}
             <span className="font-bold text-sm">{toast.message}</span>
             <button
-              onClick={() => setToast(null)}
+              onClick={() => {
+                if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                setToast(null);
+              }}
               aria-label="Dismiss Toast"
               className="ml-2 hover:opacity-70 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
