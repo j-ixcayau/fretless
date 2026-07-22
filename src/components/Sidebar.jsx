@@ -52,10 +52,10 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="font-display text-2xl tracking-wider leading-none text-foreground">
-              BASS TABS
+              CHORDLY
             </h1>
             <span className="text-[10px] text-secondary font-bold uppercase tracking-[0.2em]">
-              Manager
+              Chords &amp; Setlists
             </span>
           </div>
         </div>

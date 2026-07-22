@@ -1,16 +1,30 @@
-# React + Vite
+# Chordly
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Organize, transpose, and practice your songs and chord charts — with setlists, auto-scroll, and AI-powered smart import.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Song library** — store lyrics and above-line chord charts, optimized for mobile display.
+- **Transpose** — shift any song to your preferred key on the fly.
+- **Setlists** — group songs into ordered setlists and play through them.
+- **Smart Import** — paste text or drop an image of a chord sheet and let Gemini format it automatically.
+- **Auto-scroll & playback** — hands-free practice with custom scroll speed.
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+React 19 + Vite, Firebase (Auth + Firestore), Tailwind CSS, Framer Motion, and the Google Gemini API.
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
+
+Set your Gemini API key in the app's Settings, or provide `VITE_GEMINI_API_KEY` in `.env.local`.
+
+## Scripts
+
+- `npm run dev` — start the dev server
+- `npm run build` — production build
+- `npm run deploy` — build and deploy to Firebase Hosting

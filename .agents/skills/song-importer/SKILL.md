@@ -1,11 +1,11 @@
 ---
 name: song-importer
-description: Formats song lyrics and chords into the specific Bass Tab Manager format, including metadata and ASCII tab placeholders. Use when users provide a song and ask to "add it", "import it", or "format it for the app".
+description: Formats song lyrics and chords into the specific Chordly format, including metadata and ASCII tab placeholders. Use when users provide a song and ask to "add it", "import it", or "format it for the app".
 ---
 
 # Song Importer Skill
 
-This skill ensures songs are formatted correctly for the **Bass Tab Manager** app, maximizing compatibility with the built-in transposer and the UI preview.
+This skill ensures songs are formatted correctly for the **Chordly** app, maximizing compatibility with the built-in transposer and the UI preview.
 
 ## Core Workflow
 

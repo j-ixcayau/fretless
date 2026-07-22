@@ -7,7 +7,7 @@ function getApiKey() {
 }
 
 const SYSTEM_INSTRUCTION = `
-You are the song-importer skill for the Bass Tab Manager app.
+You are the song-importer skill for the Chordly app.
 Your job is to format song lyrics and chords into a specific JSON format optimized for mobile display.
 
 ## Core Workflow
