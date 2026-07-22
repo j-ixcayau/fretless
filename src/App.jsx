@@ -311,7 +311,14 @@ function AppContent() {
   };
 
   return (
-    <div className="relative h-[100dvh] w-full bg-background overflow-hidden">
+    <div
+      className="relative h-[100dvh] w-full bg-background overflow-hidden"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
+    >
       <div className="h-full w-full">
         <Routes location={location}>
           <Route

@@ -12,6 +12,7 @@ import {
 import SongRow from "./SongRow";
 import Segmented from "./ui/Segmented";
 import IconButton from "./ui/IconButton";
+import Logo from "./ui/Logo";
 import { cn } from "../lib/utils";
 
 const SORT_OPTIONS = [
@@ -100,7 +101,7 @@ export default function Library({
       <div className="px-5 pt-5 pb-3 shrink-0 w-full max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[9px] bg-gradient-to-br from-primary to-secondary" />
+            <Logo size={32} className="rounded-[9px]" />
             <span className="text-lg font-extrabold tracking-tight">
               Chordly
             </span>

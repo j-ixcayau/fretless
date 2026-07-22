@@ -217,6 +217,11 @@ export default function TabDetail({
         <div
           data-overlay-open
           className="fixed inset-0 z-[200] bg-play-bg flex flex-col"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            paddingLeft: "env(safe-area-inset-left)",
+            paddingRight: "env(safe-area-inset-right)",
+          }}
         >
           <div className="pt-7 px-6 pb-3 text-center shrink-0">
             <div className="text-[22px] font-extrabold text-primary leading-tight">
