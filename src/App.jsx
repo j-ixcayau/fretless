@@ -42,6 +42,9 @@ function Page({ children }) {
 function TabDetailWrapper({ tabs, deleteTab, updateTab, showToast }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Where we came from (e.g. a setlist) so in-app "back" returns there.
+  const from = location.state?.from || "/";
   const tab = tabs.find((t) => t.id === id);
 
   if (!tab) {
@@ -56,11 +59,11 @@ function TabDetailWrapper({ tabs, deleteTab, updateTab, showToast }) {
     <Page>
       <TabDetail
         tab={tab}
-        onEdit={() => navigate(`/tabs/${id}/edit`)}
-        onBack={() => navigate("/")}
+        onEdit={() => navigate(`/tabs/${id}/edit`, { state: { from } })}
+        onBack={() => navigate(from)}
         onDelete={() => {
           deleteTab(id);
-          navigate("/");
+          navigate(from);
         }}
         onEnterPlayMode={() =>
           updateTab(id, { last_played_at: serverTimestamp() }).catch(() => {})
@@ -78,6 +81,8 @@ function TabDetailWrapper({ tabs, deleteTab, updateTab, showToast }) {
 function TabEditorWrapper({ tabs, addTab, updateTab, showToast }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from;
   const tab = id ? tabs.find((t) => t.id === id) : null;
 
   const handleSave = async (tabData) => {
@@ -85,7 +90,7 @@ function TabEditorWrapper({ tabs, addTab, updateTab, showToast }) {
       if (id) {
         await updateTab(id, tabData);
         showToast("Changes saved");
-        navigate(`/tabs/${id}`);
+        navigate(`/tabs/${id}`, from ? { state: { from } } : undefined);
       } else {
         const newTab = await addTab(tabData);
         showToast("Song created");
@@ -134,7 +139,10 @@ function SetlistDetailWrapper({
         onBack={() => navigate("/")}
         onPlay={(index) => {
           const tabId = setlist.tabs[index];
-          if (tabId) navigate(`/tabs/${tabId}`);
+          if (tabId)
+            navigate(`/tabs/${tabId}`, {
+              state: { from: `/setlists/${id}` },
+            });
         }}
       />
     </Page>

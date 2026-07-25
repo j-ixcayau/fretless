@@ -66,6 +66,9 @@ export function transposeTab(content, semitones, preferSharps = true) {
 
   const lines = content.split("\n");
   const transposedLines = lines.map((line) => {
+    // Leave user comment lines ("--- my note") untouched.
+    if (/^\s*---\s/.test(line)) return line;
+
     // Check if the line is a "string" line (e.g. G|---)
     // We only transpose the string labels (the part before the |)
     if (line.includes("|")) {

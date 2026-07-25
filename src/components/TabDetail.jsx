@@ -16,6 +16,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
 
+// Lines that begin with "--- " are treated as user comments/annotations.
+const COMMENT_RE = /^\s*---\s/;
+
+// Render chart text, highlighting comment lines so they're easy to spot.
+function renderChart(text) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    const nl = i < lines.length - 1 ? "\n" : "";
+    if (COMMENT_RE.test(line)) {
+      return (
+        <span key={i} className="text-secondary font-bold">
+          {line}
+          {nl}
+        </span>
+      );
+    }
+    return line + nl;
+  });
+}
+
 export default function TabDetail({
   tab,
   onEdit,
@@ -246,7 +266,7 @@ export default function TabDetail({
               className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
               style={{ fontSize: `${fontSize}px`, lineHeight: 2.1 }}
             >
-              {transposedContent}
+              {renderChart(transposedContent)}
             </pre>
           </div>
 
@@ -522,7 +542,7 @@ export default function TabDetail({
             className="font-mono font-semibold whitespace-pre text-[#e8e7f5] m-0 overflow-x-auto"
             style={{ fontSize: "15px", lineHeight: 1.9 }}
           >
-            {transposedContent || "No chart content yet."}
+            {transposedContent ? renderChart(transposedContent) : "No chart content yet."}
           </pre>
         </div>
 
