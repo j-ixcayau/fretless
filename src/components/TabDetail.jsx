@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,24 +9,29 @@ import {
   X,
   Pause,
 } from "lucide-react";
-import { transposeTab, transposeChord, getInterval } from "../lib/transposer";
+import {
+  transposeTab,
+  transposeChord,
+  getInterval,
+  splitComment,
+} from "../lib/transposer";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
 
-// Lines that begin with "--- " are treated as user comments/annotations.
-const COMMENT_RE = /^\s*---\s/;
-
-// Render chart text, highlighting comment lines so they're easy to spot.
+// Render chart text, highlighting "--- comment" annotations (whole-line or
+// inline) so they're easy to spot on stage.
 function renderChart(text) {
   const lines = text.split("\n");
   return lines.map((line, i) => {
     const nl = i < lines.length - 1 ? "\n" : "";
-    if (COMMENT_RE.test(line)) {
+    const [code, comment] = splitComment(line);
+    if (comment) {
       return (
-        <span key={i} className="text-secondary font-bold">
-          {line}
+        <span key={i}>
+          {code}
+          <span className="text-secondary font-bold">{comment}</span>
           {nl}
         </span>
       );
@@ -49,7 +53,7 @@ export default function TabDetail({
   const [transpose, setTranspose] = useState(0);
   const [preferSharps, setPreferSharps] = useState(true);
   const [isPlayMode, setIsPlayMode] = useState(false);
-  const [fontSize, setFontSize] = useState(19);
+  const [fontSize, setFontSize] = useState(14);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeedMultiplier, setScrollSpeedMultiplier] = useState(1);
   const [showControls, setShowControls] = useState(true);
@@ -105,57 +109,34 @@ export default function TabDetail({
     setTranspose((prev) => Math.max(-12, Math.min(12, prev + delta)));
   };
 
+  const exitPlayMode = () => {
+    setIsPlayMode(false);
+    setIsAutoScrolling(false);
+    setSpeedOpen(false);
+  };
+
   const togglePlayMode = () => {
     if (!isPlayMode) {
-      const el = document.documentElement;
-      if (el.requestFullscreen) {
-        el.requestFullscreen().catch(() => {});
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      }
+      // In a standalone PWA the app already fills the screen, so Play Mode is
+      // just a normal full-height in-app view — no browser-fullscreen portal,
+      // which was the source of the iOS bottom-inset positioning bug.
       setIsPlayMode(true);
       setIsAutoScrolling(false);
       onEnterPlayMode?.();
     } else {
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      } else if (
-        document.webkitFullscreenElement &&
-        document.webkitExitFullscreen
-      ) {
-        document.webkitExitFullscreen();
-      }
-      setIsPlayMode(false);
-      setIsAutoScrolling(false);
-      setSpeedOpen(false);
+      exitPlayMode();
     }
   };
 
-  // Exit play mode when leaving fullscreen
+  // Escape exits Play Mode (no browser fullscreen to leave anymore).
   useEffect(() => {
-    const onChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        setIsPlayMode(false);
-        setIsAutoScrolling(false);
-      }
+    if (!isPlayMode) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") exitPlayMode();
     };
-    document.addEventListener("fullscreenchange", onChange);
-    document.addEventListener("webkitfullscreenchange", onChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onChange);
-      document.removeEventListener("webkitfullscreenchange", onChange);
-    };
-  }, []);
-
-  // Hide app chrome / force iOS Safari navbars away in Play Mode
-  useEffect(() => {
-    if (isPlayMode) {
-      document.body.classList.add("play-mode-active");
-      return () => {
-        document.body.classList.remove("play-mode-active");
-        window.scrollTo(0, 0);
-      };
-    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlayMode]);
 
   // Auto-scroll loop (Play Mode). Scales the duration-derived speed by the
@@ -231,172 +212,151 @@ export default function TabDetail({
   const showSaveKey =
     currentKey && currentKey !== (tab.preferred_key || tab.base_key);
 
-  // ---- Play Mode portal ---------------------------------------------------
-  const playModePortal = isPlayMode
-    ? createPortal(
-        <div
-          data-overlay-open
-          className="fixed inset-0 z-[200] bg-play-bg flex flex-col"
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingLeft: "env(safe-area-inset-left)",
-            paddingRight: "env(safe-area-inset-right)",
-          }}
+  // ---- Play Mode (normal full-height in-app view, not a fullscreen portal) --
+  const playModeView = isPlayMode ? (
+    <div
+      data-overlay-open
+      className="absolute inset-0 z-40 bg-play-bg flex flex-col"
+    >
+      {/* Title */}
+      <div className="pt-2 px-5 pb-2 text-center shrink-0">
+        <div className="text-[17px] font-extrabold text-primary leading-tight">
+          {tab.title}
+          {currentKey && (
+            <span className="text-secondary"> · {currentKey}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div ref={playScrollRef} className="flex-1 overflow-y-auto px-6 pb-20">
+        <pre
+          className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
+          style={{ fontSize: `${fontSize}px`, lineHeight: 2.1 }}
         >
-          <div className="pt-7 px-6 pb-3 text-center shrink-0">
-            <div className="text-[22px] font-extrabold text-primary leading-tight">
-              {tab.title}
-            </div>
-            <div className="text-[13px] text-muted-foreground mt-0.5">
-              {tab.artist}
-              {currentKey && (
-                <>
-                  {" · "}Key{" "}
-                  <span className="text-secondary font-bold">{currentKey}</span>
-                </>
-              )}
-            </div>
-          </div>
+          {renderChart(transposedContent)}
+        </pre>
+      </div>
 
-          <div
-            ref={playScrollRef}
-            className="flex-1 overflow-y-auto px-6 pb-32"
+      {/* Bottom controls */}
+      <AnimatePresence>
+        {showControls && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            className="absolute inset-x-0 bottom-0 z-10"
           >
-            <pre
-              className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
-              style={{ fontSize: `${fontSize}px`, lineHeight: 2.1 }}
-            >
-              {renderChart(transposedContent)}
-            </pre>
-          </div>
-
-          <AnimatePresence>
-            {showControls && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                className="fixed inset-x-0 bottom-0 z-[210]"
-              >
-                <AnimatePresence>
-                  {speedOpen && tab.duration && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 12 }}
-                      className="mx-4 mb-2 p-4 rounded-2xl bg-popover border border-border-chrome backdrop-blur-xl w-[calc(100%-2rem)] max-w-4xl sm:mx-auto"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2">
-                          Scroll speed
-                        </span>
-                        <span className="text-sm font-bold text-secondary">
-                          {scrollSpeedMultiplier.toFixed(1)}×
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0.5"
-                        max="2"
-                        step="0.1"
-                        value={scrollSpeedMultiplier}
-                        onChange={(e) =>
-                          setScrollSpeedMultiplier(parseFloat(e.target.value))
-                        }
-                        className="w-full accent-[var(--secondary)]"
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div
-                  className="bg-popover border-t border-border-chrome backdrop-blur-xl px-4 pt-3.5"
-                  style={{
-                    paddingBottom: "calc(0.875rem + env(safe-area-inset-bottom))",
-                  }}
+            <AnimatePresence>
+              {speedOpen && tab.duration && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 12 }}
+                  className="mx-4 mb-2 p-4 rounded-2xl bg-popover border border-border-chrome backdrop-blur-xl w-[calc(100%-2rem)] max-w-4xl sm:mx-auto"
                 >
-                  <div className="flex items-center gap-2.5 w-full max-w-4xl mx-auto">
-                  {/* Scroll toggle + speed */}
-                  <div
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2">
+                      Scroll speed
+                    </span>
+                    <span className="text-sm font-bold text-secondary">
+                      {scrollSpeedMultiplier.toFixed(1)}×
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value={scrollSpeedMultiplier}
+                    onChange={(e) =>
+                      setScrollSpeedMultiplier(parseFloat(e.target.value))
+                    }
+                    className="w-full accent-[var(--secondary)]"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="bg-gradient-to-t from-play-bg via-play-bg to-transparent px-4 pt-8 pb-2">
+              <div className="flex items-center gap-2.5 w-full max-w-4xl mx-auto">
+                {/* Scroll toggle + speed */}
+                <div
+                  className={cn(
+                    "flex-1 flex items-center rounded-[14px] overflow-hidden border transition-colors",
+                    isAutoScrolling
+                      ? "bg-secondary border-secondary text-secondary-foreground"
+                      : "bg-surface border-border-chrome text-foreground",
+                    !tab.duration && "opacity-40",
+                  )}
+                >
+                  <button
+                    onClick={() => tab.duration && setIsAutoScrolling((v) => !v)}
+                    disabled={!tab.duration}
+                    className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] font-extrabold flex-1 justify-center"
+                  >
+                    {isAutoScrolling ? (
+                      <Pause className="w-4 h-4 fill-current" />
+                    ) : (
+                      <Play className="w-4 h-4 fill-current" />
+                    )}
+                    Scroll
+                  </button>
+                  <button
+                    onClick={() => tab.duration && setSpeedOpen((v) => !v)}
+                    disabled={!tab.duration}
                     className={cn(
-                      "flex-1 flex items-center rounded-[14px] overflow-hidden border transition-colors",
+                      "px-3 py-2.5 text-[13px] font-extrabold border-l",
                       isAutoScrolling
-                        ? "bg-secondary border-secondary text-secondary-foreground"
-                        : "bg-surface border-border-chrome text-foreground",
-                      !tab.duration && "opacity-40",
+                        ? "border-secondary-foreground/20"
+                        : "border-border-chrome",
                     )}
                   >
-                    <button
-                      onClick={() =>
-                        tab.duration && setIsAutoScrolling((v) => !v)
-                      }
-                      disabled={!tab.duration}
-                      className="flex items-center gap-2 px-3.5 py-3 text-[13px] font-extrabold flex-1 justify-center"
-                    >
-                      {isAutoScrolling ? (
-                        <Pause className="w-4 h-4 fill-current" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current" />
-                      )}
-                      Scroll
-                    </button>
-                    <button
-                      onClick={() => tab.duration && setSpeedOpen((v) => !v)}
-                      disabled={!tab.duration}
-                      className={cn(
-                        "px-3 py-3 text-[13px] font-extrabold border-l",
-                        isAutoScrolling
-                          ? "border-secondary-foreground/20"
-                          : "border-border-chrome",
-                      )}
-                    >
-                      {scrollSpeedMultiplier.toFixed(1)}×
-                    </button>
-                  </div>
-
-                  {/* Font size stepper */}
-                  <div className="flex-1 flex items-center justify-center gap-3 rounded-[14px] bg-surface border border-border-chrome py-3">
-                    <button
-                      onClick={() => setFontSize((s) => Math.max(12, s - 1))}
-                      aria-label="Decrease font size"
-                      className="text-chip-foreground font-bold text-[15px] px-1"
-                    >
-                      A−
-                    </button>
-                    <span className="text-muted-foreground-2 text-[11px] font-bold w-8 text-center">
-                      {fontSize}px
-                    </span>
-                    <button
-                      onClick={() => setFontSize((s) => Math.min(40, s + 1))}
-                      aria-label="Increase font size"
-                      className="text-chip-foreground font-bold text-[15px] px-1"
-                    >
-                      A+
-                    </button>
-                  </div>
-
-                  {/* Close */}
-                  <button
-                    onClick={togglePlayMode}
-                    aria-label="Exit Play Mode"
-                    className="w-11 h-11 shrink-0 rounded-[14px] bg-primary text-white flex items-center justify-center"
-                  >
-                    <X className="w-5 h-5" />
+                    {scrollSpeedMultiplier.toFixed(1)}×
                   </button>
-                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>,
-        document.body,
-      )
-    : null;
+
+                {/* Font size stepper */}
+                <div className="flex-1 flex items-center justify-center gap-3 rounded-[14px] bg-surface border border-border-chrome py-2.5">
+                  <button
+                    onClick={() => setFontSize((s) => Math.max(12, s - 1))}
+                    aria-label="Decrease font size"
+                    className="text-chip-foreground font-bold text-[15px] px-1"
+                  >
+                    A−
+                  </button>
+                  <span className="text-muted-foreground-2 text-[11px] font-bold w-8 text-center">
+                    {fontSize}px
+                  </span>
+                  <button
+                    onClick={() => setFontSize((s) => Math.min(40, s + 1))}
+                    aria-label="Increase font size"
+                    className="text-chip-foreground font-bold text-[15px] px-1"
+                  >
+                    A+
+                  </button>
+                </div>
+
+                {/* Close */}
+                <button
+                  onClick={togglePlayMode}
+                  aria-label="Exit Play Mode"
+                  className="w-10 h-10 shrink-0 rounded-[14px] bg-primary text-white flex items-center justify-center"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  ) : null;
 
   // ---- Song Detail --------------------------------------------------------
   return (
-    <div className="flex flex-col h-full bg-background">
-      {playModePortal}
+    <div className="relative flex flex-col h-full bg-background">
+      {playModeView}
 
       {/* Header */}
       <div className="border-b border-[var(--border-chrome)] shrink-0">

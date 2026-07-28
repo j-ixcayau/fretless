@@ -113,6 +113,17 @@ textarea {
   flex-direction: column;
 }
 
+/* Stop iOS Safari from auto-zooming on focus: any field under 16px triggers
+   the zoom, so ensure form controls are at least 16px on small screens.
+   Unlayered so it overrides Tailwind's text-* utilities. */
+@media (max-width: 640px) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* Hide scrollbars on horizontal chip rows while keeping scroll */
 .no-scrollbar {
   -ms-overflow-style: none;
@@ -122,14 +133,3 @@ textarea {
   display: none;
 }
 
-body.play-mode-active {
-  overflow: visible !important;
-  background-color: var(--play-bg);
-}
-
-body.play-mode-active #root {
-  position: fixed !important;
-  top: -9999px !important;
-  left: -9999px !important;
-  visibility: hidden !important;
-}

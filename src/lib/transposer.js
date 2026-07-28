@@ -58,6 +58,56 @@ export function transposeChord(chord, semitones, preferSharps = true) {
 }
 
 /**
+ * Splits a line into [code, comment] at a user comment marker: a "---"
+ * token at the start of the line or preceded by whitespace, followed by a
+ * space or end of line. The comment runs from "---" to the end of the line.
+ * Returns ["<line>", ""] when there is no comment.
+ *
+ * Examples:
+ *   "--- Silencio bajo"                 -> ["", "--- Silencio bajo"]
+ *   "[Estribillo Final] --- Silencio"   -> ["[Estribillo Final] ", "--- Silencio"]
+ *   "E|----5---3|"                       -> ["E|----5---3|", ""]  (dashes in tab)
+ */
+export function splitComment(line) {
+  const m = line.match(/(^|\s)---(\s|$)/);
+  if (!m) return [line, ""];
+  const idx = m.index + m[1].length;
+  return [line.slice(0, idx), line.slice(idx)];
+}
+
+// Transposes a single line of chart "code" (no trailing comment).
+function transposeCodeSegment(line, semitones, preferSharps) {
+  // String/tab line (e.g. "G|---"): only the label before "|" is a note.
+  if (line.includes("|")) {
+    const parts = line.split("|");
+    const label = parts[0].trim();
+    const transposedLabel = transposeChord(label, semitones, preferSharps);
+    return transposedLabel + "|" + parts.slice(1).join("|");
+  }
+
+  // Chord line heuristic (e.g. "Am   G   F").
+  const chordRegex =
+    /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
+  if (chordRegex.test(line)) {
+    chordRegex.lastIndex = 0;
+    return line.replace(chordRegex, (match) =>
+      transposeChord(match, semitones, preferSharps),
+    );
+  }
+
+  // "Key: E" style header.
+  const keyMatch = line.match(/(Key:\s*)([A-G][#b]?)/i);
+  if (keyMatch) {
+    return line.replace(
+      keyMatch[2],
+      transposeNote(keyMatch[2], semitones, preferSharps),
+    );
+  }
+
+  return line;
+}
+
+/**
  * Transposes the entire ASCII tab content.
  * Only transposes chord/note annotations, leaves fret numbers alone.
  */
@@ -65,43 +115,13 @@ export function transposeTab(content, semitones, preferSharps = true) {
   if (semitones === 0) return content;
 
   const lines = content.split("\n");
-  const transposedLines = lines.map((line) => {
-    // Leave user comment lines ("--- my note") untouched.
-    if (/^\s*---\s/.test(line)) return line;
+  const transposedLines = lines.map((rawLine) => {
+    // Never transpose inside a user comment; only the part before "---".
+    const [code, comment] = splitComment(rawLine);
+    if (!code.trim()) return rawLine;
 
-    // Check if the line is a "string" line (e.g. G|---)
-    // We only transpose the string labels (the part before the |)
-    if (line.includes("|")) {
-      const parts = line.split("|");
-      // Transpose the label part if it's a note
-      const label = parts[0].trim();
-      const transposedLabel = transposeChord(label, semitones, preferSharps);
-      return transposedLabel + "|" + parts.slice(1).join("|");
-    }
-
-    // Check if the line looks like it contains chords (e.g. "Am   G   F")
-    // A chord line usually doesn't have many numbers and contains note-like characters.
-    // This is a heuristic.
-    const chordRegex =
-      /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
-    if (chordRegex.test(line)) {
-      // Reset lastIndex because .test() on a global regex advances it
-      chordRegex.lastIndex = 0;
-      return line.replace(chordRegex, (match) => {
-        return transposeChord(match, semitones, preferSharps);
-      });
-    }
-
-    // Also handle "Key: E" style headers
-    const keyMatch = line.match(/(Key:\s*)([A-G][#b]?)/i);
-    if (keyMatch) {
-      return line.replace(
-        keyMatch[2],
-        transposeNote(keyMatch[2], semitones, preferSharps),
-      );
-    }
-
-    return line;
+    const transposed = transposeCodeSegment(code, semitones, preferSharps);
+    return transposed + comment;
   });
 
   return transposedLines.join("\n");
