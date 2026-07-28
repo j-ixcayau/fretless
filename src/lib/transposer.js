@@ -75,6 +75,20 @@ export function splitComment(line) {
   return [line.slice(0, idx), line.slice(idx)];
 }
 
+// A single chord token: C, Am, D/F#, F#m7, Csus4, Dadd9, Bb, D4…
+const CHORD_TOKEN_RE =
+  /^[A-G][#b]?(?:maj|min|dim|aug|sus|add|M|m|°|ø|\+)?\d{0,2}(?:sus\d|add\d)?(?:\/[A-G][#b]?)?$/;
+
+/**
+ * True when every whitespace-separated token on a line is a chord — i.e. it's
+ * a chord line sitting above the lyrics, not a lyric or a section header.
+ */
+export function isChordLine(line) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  return trimmed.split(/\s+/).every((t) => CHORD_TOKEN_RE.test(t));
+}
+
 // Transposes a single line of chart "code" (no trailing comment).
 function transposeCodeSegment(line, semitones, preferSharps) {
   // String/tab line (e.g. "G|---"): only the label before "|" is a note.

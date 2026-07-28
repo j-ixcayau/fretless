@@ -11,6 +11,54 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
+import { renderChart } from "../lib/chart";
+
+// Textarea with a synced highlight layer behind it so "--- comment" lines are
+// coloured while editing. The textarea sits on top with transparent text; the
+// <pre> underneath renders the coloured content and mirrors its scroll.
+function HighlightedTextarea({ value, onChange, name, placeholder }) {
+  const taRef = useRef(null);
+  const preRef = useRef(null);
+
+  const syncScroll = () => {
+    if (preRef.current && taRef.current) {
+      preRef.current.scrollTop = taRef.current.scrollTop;
+      preRef.current.scrollLeft = taRef.current.scrollLeft;
+    }
+  };
+
+  const shared =
+    "absolute inset-0 m-0 p-6 border-0 font-mono text-sm leading-relaxed whitespace-pre tracking-normal";
+
+  return (
+    <div className="relative flex-1 min-h-0 bg-surface border border-border rounded-2xl overflow-hidden focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+      <pre
+        ref={preRef}
+        aria-hidden="true"
+        className={cn(
+          shared,
+          "overflow-hidden pointer-events-none text-foreground",
+        )}
+      >
+        {value ? renderChart(value) : ""}
+        {"\n"}
+      </pre>
+      <textarea
+        ref={taRef}
+        name={name}
+        value={value}
+        onChange={onChange}
+        onScroll={syncScroll}
+        placeholder={placeholder}
+        spellCheck={false}
+        className={cn(
+          shared,
+          "w-full h-full resize-none overflow-auto bg-transparent text-transparent caret-white placeholder:text-muted-foreground-2 focus:outline-none",
+        )}
+      />
+    </div>
+  );
+}
 
 function tabToFormData(tab) {
   return {
@@ -32,7 +80,6 @@ export default function TabEditor({ tab, onSave, onCancel }) {
   const [viewMode, setViewMode] = useState("edit"); // 'edit', 'split', 'preview'
   const [saveStatus, setSaveStatus] = useState("idle"); // 'idle', 'saving', 'saved'
 
-  const textareaRef = useRef(null);
   // Tracks whether formData has been populated from real tab data yet, so we
   // don't clobber in-progress edits once the initial sync has happened.
   const hasSyncedTab = useRef(!!tab);
@@ -331,16 +378,14 @@ b : Bend
               </motion.div>
             )}
 
-            <textarea
-              ref={textareaRef}
+            <HighlightedTextarea
               name="content"
               value={formData.content}
               onChange={handleChange}
-              placeholder="G |----------------|
+              placeholder={`G |----------------|
 D |----------------|
 A |----------------|
-E |----------------|"
-              className="flex-1 w-full min-h-0 p-6 bg-surface border border-border rounded-2xl focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-mono text-sm resize-none leading-relaxed overflow-y-auto"
+E |----------------|`}
             />
           </div>
         </div>
@@ -377,7 +422,9 @@ E |----------------|"
 
               <div className="p-6 bg-surface rounded-2xl border border-border overflow-x-auto">
                 <pre className="font-mono text-sm leading-relaxed whitespace-pre">
-                  {formData.content || "Start typing to see preview..."}
+                  {formData.content
+                    ? renderChart(formData.content)
+                    : "Start typing to see preview..."}
                 </pre>
               </div>
             </div>

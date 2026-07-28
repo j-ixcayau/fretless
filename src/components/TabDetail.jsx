@@ -9,36 +9,12 @@ import {
   X,
   Pause,
 } from "lucide-react";
-import {
-  transposeTab,
-  transposeChord,
-  getInterval,
-  splitComment,
-} from "../lib/transposer";
+import { transposeTab, transposeChord, getInterval } from "../lib/transposer";
+import { renderChart } from "../lib/chart";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
-
-// Render chart text, highlighting "--- comment" annotations (whole-line or
-// inline) so they're easy to spot on stage.
-function renderChart(text) {
-  const lines = text.split("\n");
-  return lines.map((line, i) => {
-    const nl = i < lines.length - 1 ? "\n" : "";
-    const [code, comment] = splitComment(line);
-    if (comment) {
-      return (
-        <span key={i}>
-          {code}
-          <span className="text-secondary font-bold">{comment}</span>
-          {nl}
-        </span>
-      );
-    }
-    return line + nl;
-  });
-}
 
 export default function TabDetail({
   tab,
