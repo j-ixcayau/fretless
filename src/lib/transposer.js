@@ -75,9 +75,11 @@ export function splitComment(line) {
   return [line.slice(0, idx), line.slice(idx)];
 }
 
-// A single chord token: C, Am, D/F#, F#m7, Csus4, Dadd9, Bb, D4…
-const CHORD_TOKEN_RE =
-  /^[A-G][#b]?(?:maj|min|dim|aug|sus|add|M|m|°|ø|\+)?\d{0,2}(?:sus\d|add\d)?(?:\/[A-G][#b]?)?$/;
+// A chord "core": C, Am, D, F#m7, Csus4, Dadd9, Bb, D4…
+const CHORD_CORE =
+  "[A-G][#b]?(?:maj|min|dim|aug|sus|add|M|m|°|ø|\\+)?\\d{0,2}(?:sus\\d|add\\d)?";
+// A chord token: one or more cores joined by "/" (slash bass) or "-" (e.g. D-G).
+const CHORD_TOKEN_RE = new RegExp(`^${CHORD_CORE}(?:[/-]${CHORD_CORE})*$`);
 
 /**
  * True when every whitespace-separated token on a line is a chord — i.e. it's
@@ -101,7 +103,7 @@ function transposeCodeSegment(line, semitones, preferSharps) {
 
   // Chord line heuristic (e.g. "Am   G   F").
   const chordRegex =
-    /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[.,\])])/g;
+    /\b[A-G][#b]?(m|maj|min|dim|aug|sus|add|7|9|11|13)*(\/[A-G][#b]?)?(?=$|\s|[-.,\])])/g;
   if (chordRegex.test(line)) {
     chordRegex.lastIndex = 0;
     return line.replace(chordRegex, (match) =>
