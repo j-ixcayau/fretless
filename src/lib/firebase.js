@@ -1,5 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
@@ -13,8 +17,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with Long Polling to avoid "access control" errors in some environments
+// Offline-first Firestore: cache reads/writes in IndexedDB so songs and
+// setlists are available offline and writes sync when the connection returns.
+// Long polling avoids "access control" errors in some environments.
 export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
   experimentalForceLongPolling: true,
 });
 

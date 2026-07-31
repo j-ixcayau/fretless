@@ -91,6 +91,17 @@ export function isChordLine(line) {
   return trimmed.split(/\s+/).every((t) => CHORD_TOKEN_RE.test(t));
 }
 
+/**
+ * True for an ASCII tablature line: a string label + "|" + frets, e.g.
+ * "G|----12-14|15------|". Only tab characters (string letters, digits, bars,
+ * dashes and technique symbols) are allowed.
+ */
+export function isTabLine(line) {
+  const trimmed = line.trim();
+  if (!trimmed.includes("|") || !trimmed.includes("-")) return false;
+  return /^[A-G0-9|#hpbrsxtT.()~\-/\\\s]+$/.test(trimmed);
+}
+
 // Transposes a single line of chart "code" (no trailing comment).
 function transposeCodeSegment(line, semitones, preferSharps) {
   // String/tab line (e.g. "G|---"): only the label before "|" is a note.
@@ -135,6 +146,9 @@ export function transposeTab(content, semitones, preferSharps = true) {
     // Never transpose inside a user comment; only the part before "---".
     const [code, comment] = splitComment(rawLine);
     if (!code.trim()) return rawLine;
+
+    // Leave tablature untouched — the string labels are the tuning, not chords.
+    if (isTabLine(code)) return rawLine;
 
     const transposed = transposeCodeSegment(code, semitones, preferSharps);
     return transposed + comment;
