@@ -210,7 +210,7 @@ export default function TabDetail({
       <div
         ref={playScrollRef}
         onScroll={(e) => setShowTopFab(e.currentTarget.scrollTop > 300)}
-        className="flex-1 min-h-0 overflow-y-auto pl-6 pr-20 pb-6"
+        className="flex-1 min-h-0 overflow-y-auto pl-6 pr-20 pb-32"
       >
         <pre
           className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
