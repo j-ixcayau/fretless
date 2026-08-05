@@ -344,7 +344,7 @@ export default function TabDetail({
               playScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             }}
             aria-label="Scroll to top"
-            className="absolute left-4 bottom-4 z-20 w-11 h-11 rounded-full bg-surface/90 border border-border-chrome text-chip-foreground flex items-center justify-center shadow-lg backdrop-blur-md"
+            className="absolute right-4 bottom-4 z-20 w-11 h-11 rounded-full bg-surface/90 border border-border-chrome text-chip-foreground flex items-center justify-center shadow-lg backdrop-blur-md"
           >
             <ArrowUp className="w-5 h-5" />
           </motion.button>

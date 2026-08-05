@@ -85,10 +85,16 @@ const CHORD_TOKEN_RE = new RegExp(`^${CHORD_CORE}(?:[/-]${CHORD_CORE})*$`);
  * True when every whitespace-separated token on a line is a chord — i.e. it's
  * a chord line sitting above the lyrics, not a lyric or a section header.
  */
+// Structural markers that may sit on a chord line: repeats (// ///), bars (|),
+// repeat counts (x2, 2x). Ignored when deciding if a line is chords.
+const MARKER_RE = /^(?:\/+|\|+|:|x\d+|\d+x)$/i;
+
 export function isChordLine(line) {
   const trimmed = line.trim();
   if (!trimmed) return false;
-  return trimmed.split(/\s+/).every((t) => CHORD_TOKEN_RE.test(t));
+  const tokens = trimmed.split(/\s+/).filter((t) => !MARKER_RE.test(t));
+  if (tokens.length === 0) return false;
+  return tokens.every((t) => CHORD_TOKEN_RE.test(t));
 }
 
 /**
