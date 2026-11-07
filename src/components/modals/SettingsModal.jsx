@@ -53,7 +53,7 @@ export default function SettingsModal({
     const accepted = await confirm({
       title: "Clear saved offline data?",
       message:
-        "This permanently removes offline data saved by older versions, including any old edits that never synced. This session cannot verify those old edits. Sync or export them from an older open tab first, then close other Chordly tabs. The app will reload, and you will need to re-enter your Gemini key.",
+        "This removes the songs and setlists cached on this device. Sync or export edits from all accounts first, then close other Chordly tabs. We wait for this account's pending edits, but cannot verify other accounts' unsynced edits; those could be lost. The app will reload, and songs must be loaded online again before they are available offline. You will need to re-enter your Gemini key.",
       confirmLabel: "Clear and reload",
     });
     if (!accepted) return;
@@ -286,9 +286,10 @@ export default function SettingsModal({
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Songs are cached only while this tab is open. Keep it open until
-            offline edits sync; reloading offline will not restore them. Older
-            versions may still have data saved on this device.
+            Songs and setlists you have opened stay on this device so you can
+            reopen Chordly offline. Pending edits sync when you reconnect. Use
+            this on a trusted device; signing out does not erase saved offline
+            data.
           </p>
           <button
             onClick={clearOfflineData}
@@ -297,7 +298,7 @@ export default function SettingsModal({
           >
             {cacheBusy
               ? "Waiting for edits to sync…"
-              : "Clear older offline data"}
+              : "Clear saved offline data"}
           </button>
           {cacheMessage && (
             <p role="status" className="text-xs text-muted-foreground">

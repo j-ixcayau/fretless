@@ -1,7 +1,8 @@
 import { initializeApp } from "firebase/app";
 import {
   initializeFirestore,
-  memoryLocalCache,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   waitForPendingWrites,
   terminate,
   clearIndexedDbPersistence,
@@ -20,10 +21,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Keep cached songs and pending edits within this tab's lifetime.
-// Legacy disk data is retained until explicitly cleared, to preserve old writes.
+// Persist songs and pending edits so the installed app can reopen offline.
 export const db = initializeFirestore(app, {
-  localCache: memoryLocalCache(),
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
   experimentalForceLongPolling: true,
 });
 

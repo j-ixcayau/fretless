@@ -23,7 +23,9 @@ npm run dev
 
 Set your own Gemini API key in the app's Settings. It stays in memory for the current signed-in session and is cleared on sign-out, account changes, or reload. Do not put Gemini keys in Vite environment variables: those are bundled into the public client.
 
-Song and setlist caches stay in memory while the tab is open. Offline edits can sync when connectivity returns, but keep the tab open until they finish; they do not survive reload. Older versions saved an offline cache on disk. It is retained to avoid deleting unsynced edits; Settings provides an explicit cleanup action after you have synced or exported any old edits and closed other tabs.
+Song and setlist data loaded on this device is cached in IndexedDB, so it remains available when reopening the installed app offline. Pending offline edits also survive reload and sync when connectivity returns. Use Chordly on a trusted device: signing out hides account data but does not erase its disk cache. To remove cached data, connect to the internet, let edits sync, close other Chordly tabs, and use **Clear saved offline data** in Settings. The app reloads after cleanup, and you must load songs online again to cache them. Browser or device storage cleanup can also remove offline data.
+
+On iPhone, open Chordly from its Home Screen icon while online, sign in, and wait for the library to load before going offline. Do this again after an app update so the service worker can download the new app files. Keep the account signed in for offline use; signing in and Smart Import require a connection. The build generates a versioned service worker that precaches the app's HTML, JavaScript, CSS, and icons.
 
 ## Scripts
 
