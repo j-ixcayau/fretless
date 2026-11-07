@@ -1,5 +1,20 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-SemiBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
 
 :root {
   /* Canvas & surfaces */
@@ -83,7 +98,8 @@
   --color-play-foreground: var(--play-foreground);
 
   --font-sans: "Inter", ui-sans-serif, system-ui;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 @layer base {
@@ -105,6 +121,8 @@ pre,
 code,
 textarea {
   font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  font-kerning: none;
 }
 
 #root {
@@ -132,4 +150,3 @@ textarea {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-

@@ -86,20 +86,35 @@ function TabEditorWrapper({ tabs, addTab, updateTab, showToast }) {
   const location = useLocation();
   const from = location.state?.from;
   const tab = id ? tabs.find((t) => t.id === id) : null;
+  const editorInstance = useRef(null);
+
+  useEffect(() => {
+    const instance = {};
+    editorInstance.current = instance;
+    return () => {
+      editorInstance.current = null;
+    };
+  }, [location.key]);
 
   const handleSave = async (tabData) => {
+    const instance = editorInstance.current;
     try {
       if (id) {
         await updateTab(id, tabData);
+        if (editorInstance.current !== instance) return true;
         showToast("Changes saved");
         navigate(`/tabs/${id}`, from ? { state: { from } } : undefined);
       } else {
         const newTab = await addTab(tabData);
+        if (editorInstance.current !== instance) return true;
         showToast("Song created");
         navigate(newTab ? `/tabs/${newTab.id}` : "/");
       }
+      return true;
     } catch {
-      showToast("Failed to save", "error");
+      if (editorInstance.current === instance)
+        showToast("Failed to save", "error");
+      return false;
     }
   };
 

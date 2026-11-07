@@ -16,6 +16,13 @@ import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
+import {
+  readChartFontSize,
+  saveChartFontSize,
+  MIN_CHART_FONT_SIZE,
+  MAX_CHART_FONT_SIZE,
+} from "../lib/playPreferences";
+import { keepScreenAwake } from "../lib/wakeLock";
 
 export default function TabDetail({
   tab,
@@ -27,45 +34,80 @@ export default function TabDetail({
 }) {
   const confirm = useConfirm();
   const playScrollRef = useRef(null);
+  const controlsRef = useRef(null);
   const [transpose, setTranspose] = useState(0);
   const [preferSharps, setPreferSharps] = useState(true);
   const [isPlayMode, setIsPlayMode] = useState(false);
-  const [fontSize, setFontSize] = useState(14);
+  const [fontSize, setFontSize] = useState(readChartFontSize);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeedMultiplier, setScrollSpeedMultiplier] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [speedOpen, setSpeedOpen] = useState(false);
   const [showTopFab, setShowTopFab] = useState(false);
+  const [controlsFocused, setControlsFocused] = useState(false);
+
+  useEffect(() => saveChartFontSize(fontSize), [fontSize]);
+
+  useEffect(() => {
+    if (!isPlayMode) return;
+    const releaseWakeLock = keepScreenAwake(navigator.wakeLock, document);
+    const pauseWhenHidden = () => {
+      if (document.hidden) setIsAutoScrolling(false);
+    };
+    document.addEventListener("visibilitychange", pauseWhenHidden);
+    return () => {
+      releaseWakeLock();
+      document.removeEventListener("visibilitychange", pauseWhenHidden);
+    };
+  }, [isPlayMode]);
 
   // Inactivity timer for Play Mode controls
   useEffect(() => {
     let timeoutId;
-    if (isPlayMode) {
+    if (isPlayMode && !speedOpen && !controlsFocused) {
       const resetTimer = () => {
         setShowControls(true);
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => setShowControls(false), 3000);
+        timeoutId = setTimeout(() => {
+          setShowControls(false);
+          setSpeedOpen(false);
+        }, 3000);
+      };
+      const onPointerMove = (event) => {
+        if (event.pointerType === "mouse") resetTimer();
       };
       resetTimer();
-      window.addEventListener("mousemove", resetTimer);
-      window.addEventListener("touchstart", resetTimer);
+      window.addEventListener("pointermove", onPointerMove);
       window.addEventListener("keydown", resetTimer);
       window.addEventListener("click", resetTimer);
       return () => {
         clearTimeout(timeoutId);
-        window.removeEventListener("mousemove", resetTimer);
-        window.removeEventListener("touchstart", resetTimer);
+        window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("keydown", resetTimer);
         window.removeEventListener("click", resetTimer);
       };
     } else {
       setShowControls(true);
     }
-  }, [isPlayMode]);
+  }, [isPlayMode, speedOpen, controlsFocused]);
+
+  const changeFontSize = (delta) => {
+    setIsAutoScrolling(false);
+    setFontSize((size) =>
+      Math.max(
+        MIN_CHART_FONT_SIZE,
+        Math.min(MAX_CHART_FONT_SIZE, size + delta),
+      ),
+    );
+  };
 
   // Auto-transpose to preferred key on load
   useEffect(() => {
-    if (tab.preferred_key && tab.base_key && tab.preferred_key !== tab.base_key) {
+    if (
+      tab.preferred_key &&
+      tab.base_key &&
+      tab.preferred_key !== tab.base_key
+    ) {
       const interval = getInterval(tab.base_key, tab.preferred_key);
       if (interval !== 0) setTranspose(interval);
     } else {
@@ -91,6 +133,7 @@ export default function TabDetail({
     setIsPlayMode(false);
     setIsAutoScrolling(false);
     setSpeedOpen(false);
+    setControlsFocused(false);
   };
 
   const togglePlayMode = () => {
@@ -140,17 +183,21 @@ export default function TabDetail({
       });
     }
 
-    if (isPlayMode && isAutoScrolling && tab.duration && container) {
-      const durationMs = parseInt(tab.duration, 10) * 1000 * 0.8;
+    if (isPlayMode && isAutoScrolling && container) {
+      const durationMs = Number(tab.duration) * 1000 * 0.8;
       const maxScroll = container.scrollHeight - container.clientHeight;
-      if (!isNaN(durationMs) && durationMs > 0 && maxScroll > 0) {
+      if (maxScroll > 0) {
         let lastTime = null;
         let exactScrollTop = container.scrollTop;
         const step = (timestamp) => {
           if (!lastTime) lastTime = timestamp;
           const delta = timestamp - lastTime;
           lastTime = timestamp;
-          const speed = (maxScroll / durationMs) * scrollSpeedMultiplier;
+          const baseSpeed =
+            Number.isFinite(durationMs) && durationMs > 0
+              ? maxScroll / durationMs
+              : 0.02;
+          const speed = baseSpeed * scrollSpeedMultiplier;
           exactScrollTop += speed * delta;
           container.scrollTop = exactScrollTop;
           if (Math.ceil(container.scrollTop) >= maxScroll) {
@@ -160,6 +207,8 @@ export default function TabDetail({
           }
         };
         raf = requestAnimationFrame(step);
+      } else {
+        setIsAutoScrolling(false);
       }
     }
 
@@ -171,7 +220,13 @@ export default function TabDetail({
         container.removeEventListener("mousedown", stopOnInteraction);
       }
     };
-  }, [isPlayMode, isAutoScrolling, tab.duration, scrollSpeedMultiplier]);
+  }, [
+    isPlayMode,
+    isAutoScrolling,
+    tab.duration,
+    scrollSpeedMultiplier,
+    fontSize,
+  ]);
 
   const handleDelete = async () => {
     const ok = await confirm({
@@ -198,7 +253,7 @@ export default function TabDetail({
     >
       {/* Title */}
       <div className="pt-2 px-5 pb-2 text-center shrink-0">
-        <div className="text-[17px] font-extrabold text-primary leading-tight">
+        <div className="text-[17px] font-extrabold text-play-foreground leading-tight">
           {tab.title}
           {currentKey && (
             <span className="text-secondary"> · {currentKey}</span>
@@ -210,11 +265,15 @@ export default function TabDetail({
       <div
         ref={playScrollRef}
         onScroll={(e) => setShowTopFab(e.currentTarget.scrollTop > 300)}
+        onPointerDown={() => {
+          if (controlsRef.current?.contains(document.activeElement))
+            document.activeElement.blur();
+        }}
         className="flex-1 min-h-0 min-w-0 overflow-y-auto pl-6 pr-[max(1.5rem,env(safe-area-inset-right))] pb-32"
       >
         <pre
           className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
-          style={{ fontSize: `${fontSize}px`, lineHeight: 2.1 }}
+          style={{ fontSize: `${fontSize}px`, lineHeight: 1.8 }}
         >
           {renderChart(transposedContent)}
         </pre>
@@ -224,6 +283,12 @@ export default function TabDetail({
       <AnimatePresence>
         {showControls && (
           <motion.div
+            ref={controlsRef}
+            onFocus={() => setControlsFocused(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget))
+                setControlsFocused(false);
+            }}
             initial={{ opacity: 0, x: 48 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, transition: { duration: 0 } }}
@@ -231,7 +296,7 @@ export default function TabDetail({
           >
             {/* Speed slider (opens to the left of the rail) */}
             <AnimatePresence>
-              {speedOpen && tab.duration && (
+              {speedOpen && (
                 <motion.div
                   initial={{ opacity: 0, x: 12 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -239,7 +304,7 @@ export default function TabDetail({
                   className="absolute right-[70px] top-1/2 -translate-y-1/2 w-52 p-4 rounded-2xl bg-popover border border-border-chrome backdrop-blur-xl pointer-events-auto"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2">
+                    <span className="text-[12px] font-bold text-chip-foreground">
                       Scroll speed
                     </span>
                     <span className="text-sm font-bold text-secondary">
@@ -247,6 +312,8 @@ export default function TabDetail({
                     </span>
                   </div>
                   <input
+                    aria-label="Auto-scroll speed"
+                    aria-valuetext={`${scrollSpeedMultiplier.toFixed(1)} times normal speed`}
                     type="range"
                     min="0.5"
                     max="2"
@@ -255,7 +322,7 @@ export default function TabDetail({
                     onChange={(e) =>
                       setScrollSpeedMultiplier(parseFloat(e.target.value))
                     }
-                    className="w-full accent-[var(--secondary)]"
+                    className="w-full min-h-11 accent-[var(--secondary)]"
                   />
                 </motion.div>
               )}
@@ -278,14 +345,15 @@ export default function TabDetail({
                   isAutoScrolling
                     ? "bg-secondary border-secondary text-secondary-foreground"
                     : "bg-surface border-border-chrome text-foreground",
-                  !tab.duration && "opacity-40",
                 )}
               >
                 <button
-                  onClick={() => tab.duration && setIsAutoScrolling((v) => !v)}
-                  disabled={!tab.duration}
-                  aria-label="Toggle auto-scroll"
-                  className="py-2.5 flex items-center justify-center"
+                  onClick={() => setIsAutoScrolling((v) => !v)}
+                  aria-label={
+                    isAutoScrolling ? "Pause auto-scroll" : "Start auto-scroll"
+                  }
+                  aria-pressed={isAutoScrolling}
+                  className="min-h-11 flex items-center justify-center"
                 >
                   {isAutoScrolling ? (
                     <Pause className="w-4 h-4 fill-current" />
@@ -294,10 +362,11 @@ export default function TabDetail({
                   )}
                 </button>
                 <button
-                  onClick={() => tab.duration && setSpeedOpen((v) => !v)}
-                  disabled={!tab.duration}
+                  onClick={() => setSpeedOpen((v) => !v)}
+                  aria-label="Adjust auto-scroll speed"
+                  aria-expanded={speedOpen}
                   className={cn(
-                    "py-1.5 text-[12px] font-extrabold border-t",
+                    "min-h-11 text-[12px] font-extrabold border-t",
                     isAutoScrolling
                       ? "border-secondary-foreground/20"
                       : "border-border-chrome",
@@ -310,19 +379,21 @@ export default function TabDetail({
               {/* Font size stepper */}
               <div className="rounded-[14px] bg-surface border border-border-chrome flex flex-col items-center py-1.5 text-chip-foreground pointer-events-auto">
                 <button
-                  onClick={() => setFontSize((s) => Math.min(40, s + 1))}
+                  onClick={() => changeFontSize(1)}
                   aria-label="Increase font size"
-                  className="py-1 w-full font-bold text-[15px]"
+                  disabled={fontSize >= MAX_CHART_FONT_SIZE}
+                  className="min-h-11 w-full font-bold text-[15px] disabled:opacity-40"
                 >
                   A+
                 </button>
-                <span className="text-muted-foreground-2 text-[10px] font-bold py-0.5">
+                <span className="text-chip-foreground text-[12px] font-bold py-0.5">
                   {fontSize}
                 </span>
                 <button
-                  onClick={() => setFontSize((s) => Math.max(12, s - 1))}
+                  onClick={() => changeFontSize(-1)}
                   aria-label="Decrease font size"
-                  className="py-1 w-full font-bold text-[15px]"
+                  disabled={fontSize <= MIN_CHART_FONT_SIZE}
+                  className="min-h-11 w-full font-bold text-[15px] disabled:opacity-40"
                 >
                   A−
                 </button>
@@ -500,7 +571,7 @@ export default function TabDetail({
           )}
           <pre
             className="font-mono font-semibold whitespace-pre text-[#e8e7f5] m-0 overflow-x-auto"
-            style={{ fontSize: "15px", lineHeight: 1.9 }}
+            style={{ fontSize: `${fontSize}px`, lineHeight: 1.9 }}
           >
             {transposedContent ? renderChart(transposedContent) : "No chart content yet."}
           </pre>

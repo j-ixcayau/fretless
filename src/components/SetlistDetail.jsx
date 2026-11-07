@@ -28,7 +28,7 @@ function SetlistRow({ tab, idx, onPlay, onRemove }) {
       value={tab}
       dragListener={false}
       dragControls={dragControls}
-      className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] bg-surface border border-border"
+      className="flex items-center gap-1.5 px-2.5 py-3 rounded-[14px] bg-surface border border-border"
     >
       <button
         className="cursor-grab active:cursor-grabbing text-[#4a4770] hover:text-icon-foreground transition-colors touch-none shrink-0"
@@ -40,6 +40,13 @@ function SetlistRow({ tab, idx, onPlay, onRemove }) {
       <span className="text-[13px] font-bold text-muted-foreground-2 w-4 text-center shrink-0">
         {idx + 1}
       </span>
+      <button
+        onClick={() => onPlay(idx)}
+        aria-label="Play song"
+        className="text-muted-foreground-2 hover:text-secondary transition-colors shrink-0 w-11 h-11 flex items-center justify-center"
+      >
+        <Play className="w-4 h-4 fill-current" />
+      </button>
       <div className="flex-1 min-w-0">
         <div className="text-[14px] font-bold text-foreground truncate leading-tight">
           {tab.title}
@@ -50,16 +57,9 @@ function SetlistRow({ tab, idx, onPlay, onRemove }) {
       </div>
       {tab.base_key && <KeyBadge musicKey={tab.base_key} />}
       <button
-        onClick={() => onPlay(idx)}
-        aria-label="Play song"
-        className="text-muted-foreground-2 hover:text-secondary transition-colors shrink-0 p-1"
-      >
-        <Play className="w-4 h-4 fill-current" />
-      </button>
-      <button
         onClick={() => onRemove(tab.id)}
         aria-label="Remove from setlist"
-        className="text-muted-foreground-2 hover:text-destructive transition-colors shrink-0 p-1"
+        className="text-muted-foreground-2 hover:text-destructive transition-colors shrink-0 w-11 h-11 flex items-center justify-center"
       >
         <X className="w-4 h-4" />
       </button>
@@ -124,9 +124,18 @@ export default function SetlistDetail({
     onUpdate({ name });
     setIsEditing(false);
   };
-  const addTab = (tabId) => onUpdate({ tabs: [...(setlist.tabs || []), tabId] });
-  const removeTab = (tabId) =>
-    onUpdate({ tabs: (setlist.tabs || []).filter((id) => id !== tabId) });
+  const addTab = (tabId) =>
+    onUpdate({ tabs: [...(setlist.tabs || []), tabId] });
+  const removeTab = async (tabId) => {
+    const song = allTabs.find((tab) => tab.id === tabId);
+    const ok = await confirm({
+      title: "Remove from setlist?",
+      message: `"${song?.title || "This song"}" stays in your library.`,
+      confirmLabel: "Remove",
+    });
+    if (ok)
+      onUpdate({ tabs: (setlist.tabs || []).filter((id) => id !== tabId) });
+  };
   const handleReorder = (order) => {
     setLocalTabs(order);
     onUpdate({ tabs: order.map((t) => t.id) });

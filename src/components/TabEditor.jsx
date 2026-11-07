@@ -78,7 +78,8 @@ export default function TabEditor({ tab, onSave, onCancel }) {
 
   const [showCheatsheet, setShowCheatsheet] = useState(false);
   const [viewMode, setViewMode] = useState("edit"); // 'edit', 'split', 'preview'
-  const [saveStatus, setSaveStatus] = useState("idle"); // 'idle', 'saving', 'saved'
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const saving = useRef(false);
 
   // Tracks whether formData has been populated from real tab data yet, so we
   // don't clobber in-progress edits once the initial sync has happened.
@@ -111,15 +112,22 @@ export default function TabEditor({ tab, onSave, onCancel }) {
     setSaveStatus("dirty");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving.current) return;
+    saving.current = true;
     setSaveStatus("saving");
     const tagsArray = formData.tags
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
-    onSave({ ...formData, tags: tagsArray });
-    setSaveStatus("saved");
-    setTimeout(() => setSaveStatus("idle"), 2000);
+    try {
+      const saved = await onSave({ ...formData, tags: tagsArray });
+      setSaveStatus(saved === false ? "error" : "saved");
+    } catch {
+      setSaveStatus("error");
+    } finally {
+      saving.current = false;
+    }
   };
 
   // Cheatsheet content
@@ -154,8 +162,18 @@ b : Bend
           <div className="h-6 w-px bg-border" />
           <h2 className="font-bold text-lg">{tab ? "Edit Tab" : "New Tab"}</h2>
           {saveStatus !== "idle" && (
-            <span className="text-xs font-medium text-muted-foreground animate-pulse">
-              {saveStatus === "saving" ? "Saving..." : "Saved"}
+            <span
+              role="status"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              {
+                {
+                  dirty: "Unsaved",
+                  saving: "Saving…",
+                  saved: "Saved",
+                  error: "Save failed",
+                }[saveStatus]
+              }
             </span>
           )}
         </div>
@@ -201,6 +219,7 @@ b : Bend
           </div>
           <button
             onClick={handleSave}
+            disabled={saveStatus === "saving"}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary-hover transition-colors"
           >
             <Save className="w-4 h-4" />
@@ -209,7 +228,10 @@ b : Bend
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <fieldset
+        disabled={saveStatus === "saving"}
+        className="flex-1 min-w-0 min-h-0 flex overflow-hidden border-0 p-0 m-0"
+      >
         {/* Editor Side */}
         <div
           className={cn(
@@ -430,7 +452,7 @@ E |----------------|`}
             </div>
           </div>
         </div>
-      </div>
+      </fieldset>
     </div>
   );
 }

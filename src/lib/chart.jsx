@@ -15,10 +15,15 @@ export function renderChart(text) {
   return lines.map((line, i) => {
     const nl = i < lines.length - 1 ? "\n" : "";
     const [code, comment] = splitComment(line);
+    const bracketed = /^\s*\[([^\]]+)\]\s*$/.exec(code);
 
     let codeClass = null;
     if (code.trim() !== "") {
-      if (isTabLine(code)) codeClass = TAB_CLASS;
+      if (bracketed)
+        codeClass = isChordLine(bracketed[1])
+          ? CHORD_CLASS
+          : "text-secondary font-bold";
+      else if (isTabLine(code)) codeClass = TAB_CLASS;
       else if (isChordLine(code)) codeClass = CHORD_CLASS;
     }
 
