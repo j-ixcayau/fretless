@@ -7,6 +7,8 @@ import {
   useParams,
 } from "react-router-dom";
 import { serverTimestamp } from "firebase/firestore";
+import { auth } from "./lib/firebase";
+import { parseSongImport } from "./lib/songValidation";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
 
@@ -152,8 +154,8 @@ function SetlistDetailWrapper({
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
-  const { tabs, loading: tabsLoading, addTab, updateTab, deleteTab } = useTabs();
+  const { user, loading: authLoading, geminiApiKey, setGeminiApiKey } = useAuth();
+  const { tabs, loading: tabsLoading, addTab, addTabs, updateTab, deleteTab } = useTabs();
   const {
     setlists,
     loading: setlistsLoading,
@@ -179,9 +181,6 @@ function AppContent() {
   const [isImporting, setIsImporting] = useState(false);
   const [isSmartImporting, setIsSmartImporting] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState(
-    () => localStorage.getItem("geminiApiKey") || "",
-  );
 
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
@@ -260,23 +259,16 @@ function AppContent() {
     }
   };
 
-  const handleImportJson = (jsonString) => {
+  const handleImportJson = async (jsonString) => {
     try {
-      const data = JSON.parse(jsonString);
-      const items = Array.isArray(data) ? data : [data];
-      Promise.all(
-        items.map((item) => {
-          const rest = { ...item };
-          delete rest.id;
-          return addTab(rest);
-        }),
-      ).then(() =>
-        showToast(
-          `${items.length} ${items.length === 1 ? "song" : "songs"} imported`,
-        ),
+      const items = parseSongImport(jsonString);
+      await addTabs(items);
+      showToast(
+        `${items.length} ${items.length === 1 ? "song" : "songs"} imported`,
       );
-    } catch {
-      showToast("Invalid JSON format", "error");
+    } catch (error) {
+      showToast(error.message || "Import failed", "error");
+      throw error;
     }
   };
 
@@ -301,7 +293,14 @@ function AppContent() {
 
   const handleSmartImport = async ({ text, file }) => {
     try {
-      const tabData = await analyzeSong(text, file);
+      const importingUid = user.uid;
+      if (auth.currentUser?.uid !== importingUid) {
+        throw new Error("Your account changed. Please try again.");
+      }
+      const tabData = await analyzeSong(text, file, geminiApiKey);
+      if (auth.currentUser?.uid !== importingUid) {
+        throw new Error("Your account changed. Please try again.");
+      }
       const newTab = await addTab(tabData);
       showToast(`${tabData.title || "Song"} imported`);
       if (newTab) navigate(`/tabs/${newTab.id}`);
@@ -312,7 +311,6 @@ function AppContent() {
   };
 
   const handleSaveSettings = (key) => {
-    localStorage.setItem("geminiApiKey", key);
     setGeminiApiKey(key);
     setIsSettingsOpen(false);
     showToast("Settings saved");

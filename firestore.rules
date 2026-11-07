@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function optionalString(data, key, limit) {
+      return !(key in data) || (data[key] is string && data[key].size() <= limit);
+    }
+    function optionalTimestamp(data, key) {
+      return !(key in data) || data[key] is timestamp;
+    }
+    function timestamps(data) {
+      return optionalTimestamp(data, 'created_at')
+        && optionalTimestamp(data, 'updated_at')
+        && optionalTimestamp(data, 'last_played_at');
+    }
+    function validDuration(data) {
+      return !('duration' in data)
+        || (data.duration is int && data.duration >= 0 && data.duration <= 86400)
+        || (data.duration is string && (data.duration == ''
+          || (data.duration.matches('[0-9]{1,5}') && int(data.duration) <= 86400)));
+    }
+    function validTab(data) {
+      return data.keys().hasAll(['title', 'content'])
+        && data.keys().hasOnly(['title', 'artist', 'base_key', 'preferred_key',
+          'tuning', 'tags', 'duration', 'content', 'created_at', 'updated_at', 'last_played_at'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.content is string && data.content.size() <= 200000
+        && optionalString(data, 'artist', 200)
+        && optionalString(data, 'base_key', 20)
+        && optionalString(data, 'preferred_key', 20)
+        && optionalString(data, 'tuning', 100)
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 30))
+        && validDuration(data) && timestamps(data);
+    }
+    function validSetlist(data) {
+      return data.keys().hasAll(['name', 'tabs'])
+        && data.keys().hasOnly(['name', 'tabs', 'created_at', 'updated_at', 'last_played_at'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.tabs is list && data.tabs.size() <= 1000
+        && timestamps(data);
+    }
+    match /users/{uid}/tabs/{tabId} {
+      allow read, delete: if owns(uid);
+      allow create, update: if owns(uid) && validTab(request.resource.data);
+    }
+    match /users/{uid}/setlists/{setlistId} {
+      allow read, delete: if owns(uid);
+      allow create, update: if owns(uid) && validSetlist(request.resource.data);
+    }
+  }
+}

@@ -10,41 +10,50 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
 
 export function useSetlists() {
   const { user } = useAuth();
-  const [setlists, setSetlists] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const uid = user?.uid ?? null;
+  const [snapshotState, setSnapshotState] = useState({ uid: null, data: [] });
+  const setlists = uid && snapshotState.uid === uid ? snapshotState.data : [];
+  const loading = !!uid && snapshotState.uid !== uid;
 
   useEffect(() => {
-    if (!user) {
-      setSetlists([]);
-      setLoading(false);
-      return;
-    }
+    if (!uid) return;
+    let active = true;
 
     const q = query(
-      collection(db, "users", user.uid, "setlists"),
+      collection(db, "users", uid, "setlists"),
       orderBy("created_at", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!active || auth.currentUser?.uid !== uid) return;
       const docs = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setSetlists(docs);
-      setLoading(false);
+      setSnapshotState({ uid, data: docs });
     });
 
-    return unsubscribe;
-  }, [user]);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [uid]);
+
+  const requireCurrentUser = () => {
+    if (!uid || auth.currentUser?.uid !== uid) {
+      throw new Error("Your account changed. Please try again.");
+    }
+    return uid;
+  };
 
   const addSetlist = async (setlist) => {
-    if (!user) return;
-    const docRef = await addDoc(collection(db, "users", user.uid, "setlists"), {
+    const ownerUid = requireCurrentUser();
+    const docRef = await addDoc(collection(db, "users", ownerUid, "setlists"), {
       ...setlist,
       created_at: serverTimestamp(),
     });
@@ -52,8 +61,13 @@ export function useSetlists() {
   };
 
   const updateSetlist = async (setlistId, updates) => {
-    if (!user) return;
-    const setlistRef = doc(db, "users", user.uid, "setlists", setlistId);
+    const setlistRef = doc(
+      db,
+      "users",
+      requireCurrentUser(),
+      "setlists",
+      setlistId,
+    );
     await updateDoc(setlistRef, {
       ...updates,
       updated_at: serverTimestamp(),
@@ -61,8 +75,13 @@ export function useSetlists() {
   };
 
   const deleteSetlist = async (setlistId) => {
-    if (!user) return;
-    const setlistRef = doc(db, "users", user.uid, "setlists", setlistId);
+    const setlistRef = doc(
+      db,
+      "users",
+      requireCurrentUser(),
+      "setlists",
+      setlistId,
+    );
     await deleteDoc(setlistRef);
   };
 

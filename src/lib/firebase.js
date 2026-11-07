@@ -1,10 +1,13 @@
 import { initializeApp } from "firebase/app";
 import {
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
+  memoryLocalCache,
+  waitForPendingWrites,
+  terminate,
+  clearIndexedDbPersistence,
 } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { clearLegacyOfflineCache } from "./offlineCache";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,15 +20,30 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Offline-first Firestore: cache reads/writes in IndexedDB so songs and
-// setlists are available offline and writes sync when the connection returns.
-// Long polling avoids "access control" errors in some environments.
+// Keep cached songs and pending edits within this tab's lifetime.
+// Legacy disk data is retained until explicitly cleared, to preserve old writes.
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
+  localCache: memoryLocalCache(),
   experimentalForceLongPolling: true,
 });
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+export const offlineCacheNoticeKey = "chordlyOfflineCacheNotice";
+
+export function clearSavedOfflineData() {
+  return clearLegacyOfflineCache({
+    waitForWrites: () => waitForPendingWrites(db),
+    terminate: () => terminate(db),
+    clearPersistence: () => clearIndexedDbPersistence(db),
+    report: (message) => {
+      try {
+        sessionStorage.setItem(offlineCacheNoticeKey, message);
+      } catch {
+        window.alert(message);
+      }
+    },
+    reload: () => window.location.reload(),
+  });
+}

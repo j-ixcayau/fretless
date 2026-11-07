@@ -210,7 +210,7 @@ export default function TabDetail({
       <div
         ref={playScrollRef}
         onScroll={(e) => setShowTopFab(e.currentTarget.scrollTop > 300)}
-        className="flex-1 min-h-0 overflow-y-auto pl-6 pr-20 pb-32"
+        className="flex-1 min-h-0 min-w-0 overflow-y-auto pl-6 pr-[max(1.5rem,env(safe-area-inset-right))] pb-32"
       >
         <pre
           className="font-mono font-semibold whitespace-pre text-play-foreground m-0 w-full max-w-4xl mx-auto overflow-x-auto"
@@ -226,8 +226,8 @@ export default function TabDetail({
           <motion.div
             initial={{ opacity: 0, x: 48 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 48 }}
-            className="absolute inset-y-0 right-0 z-10 flex items-center pr-3 pl-12 bg-gradient-to-l from-play-bg via-play-bg to-transparent"
+            exit={{ opacity: 0, transition: { duration: 0 } }}
+            className="absolute top-1/2 -translate-y-1/2 right-[max(0.75rem,env(safe-area-inset-right))] z-10 flex items-center pointer-events-none"
           >
             {/* Speed slider (opens to the left of the rail) */}
             <AnimatePresence>
@@ -236,7 +236,7 @@ export default function TabDetail({
                   initial={{ opacity: 0, x: 12 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 12 }}
-                  className="absolute right-[70px] top-1/2 -translate-y-1/2 w-52 p-4 rounded-2xl bg-popover border border-border-chrome backdrop-blur-xl"
+                  className="absolute right-[70px] top-1/2 -translate-y-1/2 w-52 p-4 rounded-2xl bg-popover border border-border-chrome backdrop-blur-xl pointer-events-auto"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground-2">
@@ -266,7 +266,7 @@ export default function TabDetail({
               <button
                 onClick={togglePlayMode}
                 aria-label="Exit Play Mode"
-                className="h-11 rounded-[14px] bg-primary text-white flex items-center justify-center"
+                className="h-11 rounded-[14px] bg-primary text-white flex items-center justify-center pointer-events-auto"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -274,7 +274,7 @@ export default function TabDetail({
               {/* Scroll toggle + speed */}
               <div
                 className={cn(
-                  "rounded-[14px] overflow-hidden border flex flex-col transition-colors",
+                  "rounded-[14px] overflow-hidden border flex flex-col transition-colors pointer-events-auto",
                   isAutoScrolling
                     ? "bg-secondary border-secondary text-secondary-foreground"
                     : "bg-surface border-border-chrome text-foreground",
@@ -308,7 +308,7 @@ export default function TabDetail({
               </div>
 
               {/* Font size stepper */}
-              <div className="rounded-[14px] bg-surface border border-border-chrome flex flex-col items-center py-1.5 text-chip-foreground">
+              <div className="rounded-[14px] bg-surface border border-border-chrome flex flex-col items-center py-1.5 text-chip-foreground pointer-events-auto">
                 <button
                   onClick={() => setFontSize((s) => Math.min(40, s + 1))}
                   aria-label="Increase font size"

@@ -21,10 +21,28 @@ npm install
 npm run dev
 ```
 
-Set your Gemini API key in the app's Settings, or provide `VITE_GEMINI_API_KEY` in `.env.local`.
+Set your own Gemini API key in the app's Settings. It stays in memory for the current signed-in session and is cleared on sign-out, account changes, or reload. Do not put Gemini keys in Vite environment variables: those are bundled into the public client.
+
+Song and setlist caches stay in memory while the tab is open. Offline edits can sync when connectivity returns, but keep the tab open until they finish; they do not survive reload. Older versions saved an offline cache on disk. It is retained to avoid deleting unsynced edits; Settings provides an explicit cleanup action after you have synced or exported any old edits and closed other tabs.
 
 ## Scripts
 
 - `npm run dev` — start the dev server
 - `npm run build` — production build
 - `npm run deploy` — build and deploy to Firebase Hosting
+
+## Firestore access rules
+
+`firestore.rules` allows signed-in users to read and write only their own
+`users/{uid}/tabs` and `users/{uid}/setlists` documents. Other paths are denied.
+Writes validate allowed fields, scalar types and size limits; song import
+validation also checks individual tag entries.
+
+Run `npm run test:rules` with Node 20+ and Java 21+. This downloads Firebase CLI
+and the Firestore emulator on first use and runs against `demo-chordly`, without
+production credentials. The tests cover account isolation, queries, CRUD and
+invalid writes. `npm test` runs the separate client unit tests.
+
+Hosting deployment does **not** deploy database rules. After reviewing these rules
+against existing data, deploy them separately with
+`firebase deploy --only firestore:rules --project <your-project-id>`.

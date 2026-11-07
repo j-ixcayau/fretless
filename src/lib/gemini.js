@@ -1,11 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-function getApiKey() {
-  return (
-    import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("geminiApiKey")
-  );
-}
-
 const SYSTEM_INSTRUCTION = `
 You are the song-importer skill for the Chordly app.
 Your job is to format song lyrics and chords into a specific JSON format optimized for mobile display.
@@ -254,9 +248,8 @@ async function generateWithRetry(ai, contents, maxRetries = 3) {
  * @param {File|null} imageFile - Optional image of a chord sheet
  * @returns {Promise<object>} Parsed song object matching responseSchema
  */
-export async function analyzeSong(input, imageFile = null) {
-  const apiKey = getApiKey();
-  if (!apiKey) {
+export async function analyzeSong(input, imageFile = null, apiKey = "") {
+  if (!apiKey.trim()) {
     throw new Error("Please set your Gemini API Key in Settings first.");
   }
 
@@ -264,7 +257,7 @@ export async function analyzeSong(input, imageFile = null) {
     throw new Error("Provide either a text input or an image file.");
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
   const contents = [];
 
   if (imageFile) {

@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import Modal from "../ui/Modal";
 import { useAuth, authErrorMessage } from "../../hooks/useAuth";
+import { useConfirm } from "../ui/ConfirmDialog";
+import {
+  clearSavedOfflineData,
+  offlineCacheNoticeKey,
+} from "../../lib/firebase";
 
 /**
  * Account, Gemini key, and the power-user data actions
@@ -26,6 +31,41 @@ export default function SettingsModal({
 }) {
   const { user, hasPassword, hasGoogle, linkPassword, logout } = useAuth();
   const [key, setKey] = useState(initialKey);
+  const confirm = useConfirm();
+  const [cacheBusy, setCacheBusy] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState(() => {
+    try {
+      return sessionStorage.getItem(offlineCacheNoticeKey) || "";
+    } catch {
+      return "";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(offlineCacheNoticeKey);
+    } catch {
+      // The status message remains visible when storage is unavailable.
+    }
+  }, []);
+
+  const clearOfflineData = async () => {
+    const accepted = await confirm({
+      title: "Clear saved offline data?",
+      message:
+        "This permanently removes offline data saved by older versions, including any old edits that never synced. This session cannot verify those old edits. Sync or export them from an older open tab first, then close other Chordly tabs. The app will reload, and you will need to re-enter your Gemini key.",
+      confirmLabel: "Clear and reload",
+    });
+    if (!accepted) return;
+    setCacheBusy(true);
+    setCacheMessage("");
+    try {
+      await clearSavedOfflineData();
+    } catch (error) {
+      setCacheMessage(error.message);
+      setCacheBusy(false);
+    }
+  };
 
   // "Add password" form state
   const [showLink, setShowLink] = useState(false);
@@ -35,14 +75,14 @@ export default function SettingsModal({
   const [linkDone, setLinkDone] = useState(false);
 
   useEffect(() => {
+    setKey(open ? initialKey : "");
     if (open) {
-      setKey(initialKey);
       setShowLink(false);
       setLinkPw("");
       setLinkErr("");
       setLinkDone(false);
     }
-  }, [open, initialKey]);
+  }, [open, initialKey, user?.uid]);
 
   const addPassword = async () => {
     setLinkErr("");
@@ -67,6 +107,7 @@ export default function SettingsModal({
     <Modal
       open={open}
       onClose={onClose}
+      closeDisabled={cacheBusy}
       icon={Settings}
       title="Settings"
       subtitle="Account, API key & data"
@@ -74,12 +115,14 @@ export default function SettingsModal({
         <>
           <button
             onClick={onClose}
+            disabled={cacheBusy}
             className="px-4 py-2 text-sm font-bold hover:bg-muted rounded-xl transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={() => onSave(key.trim())}
+            disabled={cacheBusy}
             className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary-hover transition-colors"
           >
             <Save className="w-4 h-4" />
@@ -88,7 +131,7 @@ export default function SettingsModal({
         </>
       }
     >
-      <div className="flex flex-col gap-6">
+      <fieldset disabled={cacheBusy} className="flex flex-col gap-6 min-w-0">
         {/* Account */}
         <div className="space-y-3">
           <label className="text-sm font-bold text-foreground">Account</label>
@@ -109,10 +152,7 @@ export default function SettingsModal({
                 {user?.displayName || user?.email || "Signed in"}
               </div>
               <div className="text-xs text-muted-foreground truncate">
-                {[
-                  hasGoogle && "Google",
-                  hasPassword && "Email/password",
-                ]
+                {[hasGoogle && "Google", hasPassword && "Email/password"]
                   .filter(Boolean)
                   .join(" · ") || "Signed in"}
               </div>
@@ -143,9 +183,9 @@ export default function SettingsModal({
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    Set a password for <b>{user.email}</b>. You'll then be able to
-                    sign in with Google <i>or</i> email/password — same account,
-                    same songs.
+                    Set a password for <b>{user.email}</b>. You'll then be able
+                    to sign in with Google <i>or</i> email/password — same
+                    account, same songs.
                   </p>
                   <input
                     type="password"
@@ -199,11 +239,13 @@ export default function SettingsModal({
             Gemini API Key
           </label>
           <p className="text-xs text-muted-foreground">
-            Required for Smart Import. Stored in your browser's local storage and
-            used only to call the Google Gemini API.
+            Required for Smart Import. Kept only for this signed-in session and
+            sent only to the Google Gemini API. Enter it again after reloading
+            or signing out.
           </p>
           <input
             type="password"
+            autoComplete="off"
             value={key}
             onChange={(e) => setKey(e.target.value)}
             placeholder="AIzaSy…"
@@ -243,8 +285,27 @@ export default function SettingsModal({
               Export all
             </button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Songs are cached only while this tab is open. Keep it open until
+            offline edits sync; reloading offline will not restore them. Older
+            versions may still have data saved on this device.
+          </p>
+          <button
+            onClick={clearOfflineData}
+            disabled={cacheBusy}
+            className="text-xs font-bold text-destructive hover:underline disabled:opacity-60"
+          >
+            {cacheBusy
+              ? "Waiting for edits to sync…"
+              : "Clear older offline data"}
+          </button>
+          {cacheMessage && (
+            <p role="status" className="text-xs text-muted-foreground">
+              {cacheMessage}
+            </p>
+          )}
         </div>
-      </div>
+      </fieldset>
     </Modal>
   );
 }

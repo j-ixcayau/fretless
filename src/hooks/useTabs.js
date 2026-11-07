@@ -4,54 +4,73 @@ import {
   query,
   orderBy,
   onSnapshot,
-  addDoc,
+  writeBatch,
   updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
+import { validateSongs } from "../lib/songValidation";
 import { useAuth } from "./useAuth";
 
 export function useTabs() {
   const { user } = useAuth();
-  const [tabs, setTabs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const uid = user?.uid;
+  const [state, setState] = useState({ uid: null, tabs: [], loading: true });
+  const tabs = state.uid === uid ? state.tabs : [];
+  const loading = !!uid && (state.uid !== uid || state.loading);
 
   useEffect(() => {
-    if (!user) {
-      setTabs([]);
-      setLoading(false);
-      return;
-    }
+    if (!uid) return;
+    let active = true;
 
     const q = query(
-      collection(db, "users", user.uid, "tabs"),
+      collection(db, "users", uid, "tabs"),
       orderBy("created_at", "desc"),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!active || auth.currentUser?.uid !== uid) return;
       const docs = snapshot.docs.map((doc) => ({
-        id: doc.id,
         ...doc.data(),
+        id: doc.id,
       }));
-      setTabs(docs);
-      setLoading(false);
+      setState({ uid, tabs: docs, loading: false });
     });
 
-    return unsubscribe;
-  }, [user]);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [uid]);
+
+  const requireCurrentUser = () => {
+    if (!uid || auth.currentUser?.uid !== uid) {
+      throw new Error("Your account changed. Please try again.");
+    }
+  };
+
+  const addTabs = async (values) => {
+    requireCurrentUser();
+    const songs = validateSongs(values);
+    const batch = writeBatch(db);
+    const saved = songs.map((song) => {
+      const ref = doc(collection(db, "users", uid, "tabs"));
+      batch.set(ref, { ...song, created_at: serverTimestamp() });
+      return { ...song, id: ref.id };
+    });
+    await batch.commit();
+    return saved;
+  };
 
   const addTab = async (tab) => {
-    if (!user) return;
-    await addDoc(collection(db, "users", user.uid, "tabs"), {
-      ...tab,
-      created_at: serverTimestamp(),
-    });
+    const [saved] = await addTabs([tab]);
+    return saved;
   };
 
   const updateTab = async (tabId, updates) => {
-    if (!user) return;
+    requireCurrentUser();
     const tabRef = doc(db, "users", user.uid, "tabs", tabId);
     await updateDoc(tabRef, {
       ...updates,
@@ -60,10 +79,10 @@ export function useTabs() {
   };
 
   const deleteTab = async (tabId) => {
-    if (!user) return;
+    requireCurrentUser();
     const tabRef = doc(db, "users", user.uid, "tabs", tabId);
     await deleteDoc(tabRef);
   };
 
-  return { tabs, loading, addTab, updateTab, deleteTab };
+  return { tabs, loading, addTab, addTabs, updateTab, deleteTab };
 }

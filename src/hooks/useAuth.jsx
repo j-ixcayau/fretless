@@ -1,4 +1,10 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import {
+  useState,
+  useReducer,
+  useEffect,
+  createContext,
+  useContext,
+} from "react";
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -11,6 +17,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase";
+import { sessionCredential } from "../lib/sessionCredential";
 
 const AuthContext = createContext();
 
@@ -50,9 +57,26 @@ export function authErrorMessage(err) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [credential, dispatchCredential] = useReducer(sessionCredential, {
+    uid: null,
+    key: "",
+  });
+
+  const geminiApiKey =
+    user?.uid && credential.uid === user.uid ? credential.key : "";
+  const setGeminiApiKey = (key) => {
+    if (!user?.uid || auth.currentUser?.uid !== user.uid) return;
+    dispatchCredential({ type: "save", uid: user.uid, key });
+  };
 
   useEffect(() => {
+    try {
+      localStorage.removeItem("geminiApiKey");
+    } catch {
+      // Browser storage may be unavailable; credentials stay in memory.
+    }
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      dispatchCredential({ type: "accountChanged", uid: u?.uid ?? null });
       setUser(u);
       setLoading(false);
     });
@@ -90,7 +114,10 @@ export function AuthProvider({ children }) {
 
   const resetPassword = (email) => sendPasswordResetEmail(auth, email.trim());
 
-  const logout = () => signOut(auth);
+  const logout = () => {
+    dispatchCredential({ type: "clear" });
+    return signOut(auth);
+  };
 
   const hasPassword = !!user?.providerData?.some(
     (p) => p.providerId === "password",
@@ -104,6 +131,8 @@ export function AuthProvider({ children }) {
       value={{
         user,
         loading,
+        geminiApiKey,
+        setGeminiApiKey,
         hasPassword,
         hasGoogle,
         loginWithGoogle,
