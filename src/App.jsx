@@ -6,8 +6,12 @@ import {
   useLocation,
   useParams,
 } from "react-router-dom";
-import { serverTimestamp } from "firebase/firestore";
-import { auth } from "./lib/firebase";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db } from "./lib/firebase";
+import {
+  DEFAULT_AUTO_SCROLL_DELAY,
+  isAutoScrollDelay,
+} from "./lib/playPreferences";
 import { parseSongImport } from "./lib/songValidation";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
@@ -41,7 +45,13 @@ function Page({ children }) {
   );
 }
 
-function TabDetailWrapper({ tabs, deleteTab, updateTab, showToast }) {
+function TabDetailWrapper({
+  tabs,
+  deleteTab,
+  updateTab,
+  showToast,
+  autoScrollDelay,
+}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +71,7 @@ function TabDetailWrapper({ tabs, deleteTab, updateTab, showToast }) {
     <Page>
       <TabDetail
         tab={tab}
+        autoScrollDelay={autoScrollDelay}
         onEdit={() => navigate(`/tabs/${id}/edit`, { state: { from } })}
         onBack={() => navigate(from)}
         onDelete={() => {
@@ -178,6 +189,29 @@ function AppContent() {
     updateSetlist,
     deleteSetlist,
   } = useSetlists();
+
+  const uid = user?.uid;
+  const [delayPreference, setDelayPreference] = useState(null);
+  const savedDelay = delayPreference?.uid === uid ? delayPreference?.value : null;
+  const autoScrollDelay = savedDelay ?? DEFAULT_AUTO_SCROLL_DELAY;
+
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(
+      doc(db, "users", uid, "preferences", "play"),
+      (snapshot) => {
+        if (auth.currentUser?.uid !== uid) return;
+        const value = snapshot.data()?.autoScrollDelaySeconds;
+        setDelayPreference({
+          uid,
+          value: isAutoScrollDelay(value) ? value : DEFAULT_AUTO_SCROLL_DELAY,
+        });
+      },
+      () => {
+        if (auth.currentUser?.uid === uid) setDelayPreference(null);
+      },
+    );
+  }, [uid]);
 
   // Library filter/sort state (persisted where noted).
   const [activeView, setActiveView] = useState(
@@ -325,10 +359,21 @@ function AppContent() {
     }
   };
 
-  const handleSaveSettings = (key) => {
+  const handleSaveSettings = async (key, delay) => {
+    if (!uid || auth.currentUser?.uid !== uid) return;
     setGeminiApiKey(key);
     setIsSettingsOpen(false);
-    showToast("Settings saved");
+    try {
+      if (isAutoScrollDelay(delay)) {
+        await setDoc(doc(db, "users", uid, "preferences", "play"), {
+          autoScrollDelaySeconds: delay,
+        });
+      }
+      if (auth.currentUser?.uid === uid) showToast("Settings saved");
+    } catch {
+      if (auth.currentUser?.uid === uid)
+        showToast("Failed to save auto-scroll delay", "error");
+    }
   };
 
   return (
@@ -396,6 +441,7 @@ function AppContent() {
             element={
               <TabDetailWrapper
                 tabs={tabs}
+                autoScrollDelay={autoScrollDelay}
                 deleteTab={handleDeleteTab}
                 updateTab={updateTab}
                 showToast={showToast}
@@ -431,6 +477,7 @@ function AppContent() {
         open={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         initialKey={geminiApiKey}
+        autoScrollDelay={autoScrollDelay}
         onSave={handleSaveSettings}
         onImportJson={() => setIsImporting(true)}
         onExportAll={handleExportAll}

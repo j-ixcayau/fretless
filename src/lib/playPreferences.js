@@ -1,3 +1,10 @@
+export const DEFAULT_AUTO_SCROLL_DELAY = 3;
+export const MAX_AUTO_SCROLL_DELAY = 10;
+
+export function isAutoScrollDelay(value) {
+  return Number.isInteger(value) && value >= 0 && value <= MAX_AUTO_SCROLL_DELAY;
+}
+
 export const CHART_FONT_SIZE_KEY = "chordly.chart-font-size.v1";
 export const DEFAULT_CHART_FONT_SIZE = 18;
 export const MIN_CHART_FONT_SIZE = 12;

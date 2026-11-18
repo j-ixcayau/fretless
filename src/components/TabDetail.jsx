@@ -26,6 +26,7 @@ import { keepScreenAwake } from "../lib/wakeLock";
 
 export default function TabDetail({
   tab,
+  autoScrollDelay,
   onEdit,
   onDelete,
   onBack,
@@ -39,7 +40,10 @@ export default function TabDetail({
   const [preferSharps, setPreferSharps] = useState(true);
   const [isPlayMode, setIsPlayMode] = useState(false);
   const [fontSize, setFontSize] = useState(readChartFontSize);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [scrollState, setScrollState] = useState("idle");
+  const isAutoScrolling = scrollState === "playing";
+  const countdown = typeof scrollState === "number" ? scrollState : null;
+  const isCountingDown = countdown !== null;
   const [scrollSpeedMultiplier, setScrollSpeedMultiplier] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [speedOpen, setSpeedOpen] = useState(false);
@@ -52,7 +56,7 @@ export default function TabDetail({
     if (!isPlayMode) return;
     const releaseWakeLock = keepScreenAwake(navigator.wakeLock, document);
     const pauseWhenHidden = () => {
-      if (document.hidden) setIsAutoScrolling(false);
+      if (document.hidden) setScrollState("idle");
     };
     document.addEventListener("visibilitychange", pauseWhenHidden);
     return () => {
@@ -61,10 +65,21 @@ export default function TabDetail({
     };
   }, [isPlayMode]);
 
+  useEffect(() => {
+    if (countdown === null) return;
+    const timeout = setTimeout(() => {
+      setScrollState((state) => {
+        if (state !== countdown) return state;
+        return countdown === 1 ? "playing" : countdown - 1;
+      });
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [countdown]);
+
   // Inactivity timer for Play Mode controls
   useEffect(() => {
     let timeoutId;
-    if (isPlayMode && !speedOpen && !controlsFocused) {
+    if (isPlayMode && !speedOpen && !controlsFocused && !isCountingDown) {
       const resetTimer = () => {
         setShowControls(true);
         clearTimeout(timeoutId);
@@ -89,10 +104,10 @@ export default function TabDetail({
     } else {
       setShowControls(true);
     }
-  }, [isPlayMode, speedOpen, controlsFocused]);
+  }, [isPlayMode, speedOpen, controlsFocused, isCountingDown]);
 
   const changeFontSize = (delta) => {
-    setIsAutoScrolling(false);
+    setScrollState("idle");
     setFontSize((size) =>
       Math.max(
         MIN_CHART_FONT_SIZE,
@@ -131,7 +146,7 @@ export default function TabDetail({
 
   const exitPlayMode = () => {
     setIsPlayMode(false);
-    setIsAutoScrolling(false);
+    setScrollState("idle");
     setSpeedOpen(false);
     setControlsFocused(false);
   };
@@ -142,7 +157,7 @@ export default function TabDetail({
       // just a normal full-height in-app view — no browser-fullscreen portal,
       // which was the source of the iOS bottom-inset positioning bug.
       setIsPlayMode(true);
-      setIsAutoScrolling(false);
+      setScrollState("idle");
       onEnterPlayMode?.();
     } else {
       exitPlayMode();
@@ -168,8 +183,8 @@ export default function TabDetail({
     const container = playScrollRef.current;
 
     const stopOnInteraction = () => {
-      if (isAutoScrolling) {
-        setIsAutoScrolling(false);
+      if (isAutoScrolling || isCountingDown) {
+        setScrollState("idle");
         setShowControls(true);
       }
     };
@@ -201,14 +216,14 @@ export default function TabDetail({
           exactScrollTop += speed * delta;
           container.scrollTop = exactScrollTop;
           if (Math.ceil(container.scrollTop) >= maxScroll) {
-            setIsAutoScrolling(false);
+            setScrollState("idle");
           } else {
             raf = requestAnimationFrame(step);
           }
         };
         raf = requestAnimationFrame(step);
       } else {
-        setIsAutoScrolling(false);
+        setScrollState("idle");
       }
     }
 
@@ -223,6 +238,7 @@ export default function TabDetail({
   }, [
     isPlayMode,
     isAutoScrolling,
+    isCountingDown,
     tab.duration,
     scrollSpeedMultiplier,
     fontSize,
@@ -348,14 +364,24 @@ export default function TabDetail({
                 )}
               >
                 <button
-                  onClick={() => setIsAutoScrolling((v) => !v)}
+                  onClick={() => {
+                    const startState = autoScrollDelay > 0 ? autoScrollDelay : "playing";
+                    setScrollState((state) =>
+                      state === "idle" ? startState : "idle",
+                    );
+                  }}
                   aria-label={
-                    isAutoScrolling ? "Pause auto-scroll" : "Start auto-scroll"
+                    isCountingDown
+                      ? `Cancel auto-scroll countdown, ${countdown} seconds remaining`
+                      : isAutoScrolling
+                        ? "Pause auto-scroll"
+                        : "Start auto-scroll"
                   }
-                  aria-pressed={isAutoScrolling}
                   className="min-h-11 flex items-center justify-center"
                 >
-                  {isAutoScrolling ? (
+                  {isCountingDown ? (
+                    <span className="tabular-nums">{countdown}</span>
+                  ) : isAutoScrolling ? (
                     <Pause className="w-4 h-4 fill-current" />
                   ) : (
                     <Play className="w-4 h-4 fill-current" />
@@ -411,7 +437,7 @@ export default function TabDetail({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => {
-              setIsAutoScrolling(false);
+              setScrollState("idle");
               playScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
             }}
             aria-label="Scroll to top"

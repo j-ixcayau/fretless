@@ -49,5 +49,13 @@ service cloud.firestore {
       allow read, delete: if owns(uid);
       allow create, update: if owns(uid) && validSetlist(request.resource.data);
     }
+    match /users/{uid}/preferences/play {
+      allow get, delete: if owns(uid);
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasOnly(['autoScrollDelaySeconds'])
+        && request.resource.data.autoScrollDelaySeconds is int
+        && request.resource.data.autoScrollDelaySeconds >= 0
+        && request.resource.data.autoScrollDelaySeconds <= 10;
+    }
   }
 }

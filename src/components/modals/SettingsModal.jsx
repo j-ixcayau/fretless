@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Modal from "../ui/Modal";
 import { useAuth, authErrorMessage } from "../../hooks/useAuth";
+import { MAX_AUTO_SCROLL_DELAY } from "../../lib/playPreferences";
 import { useConfirm } from "../ui/ConfirmDialog";
 import {
   clearSavedOfflineData,
@@ -25,12 +26,14 @@ export default function SettingsModal({
   open,
   onClose,
   initialKey = "",
+  autoScrollDelay,
   onSave,
   onImportJson,
   onExportAll,
 }) {
   const { user, hasPassword, hasGoogle, linkPassword, logout } = useAuth();
   const [key, setKey] = useState(initialKey);
+  const [delayDraft, setDelayDraft] = useState(null);
   const confirm = useConfirm();
   const [cacheBusy, setCacheBusy] = useState(false);
   const [cacheMessage, setCacheMessage] = useState(() => {
@@ -76,6 +79,7 @@ export default function SettingsModal({
 
   useEffect(() => {
     setKey(open ? initialKey : "");
+    setDelayDraft(null);
     if (open) {
       setShowLink(false);
       setLinkPw("");
@@ -110,7 +114,7 @@ export default function SettingsModal({
       closeDisabled={cacheBusy}
       icon={Settings}
       title="Settings"
-      subtitle="Account, API key & data"
+      subtitle="Account, playback, API key & data"
       footer={
         <>
           <button
@@ -121,7 +125,7 @@ export default function SettingsModal({
             Cancel
           </button>
           <button
-            onClick={() => onSave(key.trim())}
+            onClick={() => onSave(key.trim(), delayDraft)}
             disabled={cacheBusy}
             className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:bg-primary-hover transition-colors"
           >
@@ -232,6 +236,21 @@ export default function SettingsModal({
             </div>
           )}
         </div>
+
+        <label className="flex flex-col gap-2 text-sm font-bold text-foreground">
+          Auto-scroll start delay
+          <select
+            value={delayDraft ?? autoScrollDelay}
+            onChange={(event) => setDelayDraft(Number(event.target.value))}
+            className="w-full p-3 bg-background border border-border rounded-xl text-sm"
+          >
+            {Array.from({ length: MAX_AUTO_SCROLL_DELAY + 1 }, (_, seconds) => (
+              <option key={seconds} value={seconds}>
+                {seconds === 0 ? "Start immediately" : `${seconds} s`}
+              </option>
+            ))}
+          </select>
+        </label>
 
         {/* Gemini key */}
         <div className="space-y-2">

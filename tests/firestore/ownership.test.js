@@ -160,3 +160,38 @@ test("setlist schemas reject malformed and unexpected fields", async () => {
   await assertSucceeds(setDoc(ref, { name: "Empty", tabs: [] }));
   await assertFails(updateDoc(ref, { name: 1 }));
 });
+
+test("Play preferences accept only the owner's integer delay from 0 to 10", async () => {
+  const path = "users/owner/preferences/play";
+  const owner = userDb("owner");
+  const ref = doc(owner, path);
+  assert.equal((await assertSucceeds(getDoc(ref))).exists(), false);
+  for (const data of [
+    {},
+    { autoScrollDelaySeconds: -1 },
+    { autoScrollDelaySeconds: 11 },
+    { autoScrollDelaySeconds: 0.5 },
+    { autoScrollDelaySeconds: "3" },
+    { autoScrollDelaySeconds: 3, unexpected: true },
+  ]) {
+    await assertFails(setDoc(ref, data));
+  }
+  await assertSucceeds(setDoc(ref, { autoScrollDelaySeconds: 0 }));
+  await assertFails(updateDoc(ref, { autoScrollDelaySeconds: -1 }));
+  await assertSucceeds(updateDoc(ref, { autoScrollDelaySeconds: 10 }));
+  assert.equal((await getDoc(ref)).data().autoScrollDelaySeconds, 10);
+
+  for (const db of [
+    env.unauthenticatedContext().firestore(),
+    userDb("other"),
+  ]) {
+    const otherRef = doc(db, path);
+    await assertFails(getDoc(otherRef));
+    await assertFails(updateDoc(otherRef, { autoScrollDelaySeconds: 3 }));
+    await assertFails(deleteDoc(otherRef));
+  }
+  await assertSucceeds(deleteDoc(ref));
+  await assertFails(
+    setDoc(doc(userDb("other"), path), { autoScrollDelaySeconds: 3 }),
+  );
+});
