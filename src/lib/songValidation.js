@@ -1,3 +1,5 @@
+import { isAutoScrollDelay, MAX_AUTO_SCROLL_DELAY } from "./playPreferences.js";
+
 export const MAX_IMPORT_BYTES = 5_000_000;
 export const MAX_IMPORT_SONGS = 100;
 
@@ -32,6 +34,12 @@ export function validateSong(value) {
   ) {
     throw new Error("Duration must be whole seconds between 0 and 86400.");
   }
+  const delay = value.auto_scroll_delay;
+  if (delay !== undefined && !isAutoScrollDelay(delay)) {
+    throw new Error(
+      `Auto-scroll delay must be whole seconds between 0 and ${MAX_AUTO_SCROLL_DELAY}.`,
+    );
+  }
   return {
     title,
     artist: text(value.artist, "Artist", 200),
@@ -40,6 +48,7 @@ export function validateSong(value) {
     tuning: text(value.tuning, "Tuning", 100, "Standard"),
     tags: tags.map((tag) => text(tag, "Tag", 50)),
     duration: duration === "" ? "" : String(Number(duration)),
+    ...(delay === undefined ? {} : { auto_scroll_delay: delay }),
     content: text(value.content, "Content", 200_000),
   };
 }

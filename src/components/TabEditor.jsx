@@ -12,6 +12,7 @@ import {
 import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
 import { renderChart } from "../lib/chart";
+import { MAX_AUTO_SCROLL_DELAY } from "../lib/playPreferences";
 
 // Textarea with a synced highlight layer behind it so "--- comment" lines are
 // coloured while editing. The textarea sits on top with transparent text; the
@@ -69,6 +70,7 @@ function tabToFormData(tab) {
     tuning: tab?.tuning || "Standard",
     tags: tab?.tags ? tab.tags.join(", ") : "",
     duration: tab?.duration || "",
+    auto_scroll_delay: tab?.auto_scroll_delay ?? 0,
     content: tab?.content || "",
   };
 }
@@ -121,7 +123,15 @@ export default function TabEditor({ tab, onSave, onCancel }) {
       .map((t) => t.trim())
       .filter(Boolean);
     try {
-      const saved = await onSave({ ...formData, tags: tagsArray });
+      const { auto_scroll_delay, ...fields } = formData;
+      const delay = Number(auto_scroll_delay);
+      const saved = await onSave({
+        ...fields,
+        tags: tagsArray,
+        ...(delay > 0 || tab?.auto_scroll_delay !== undefined
+          ? { auto_scroll_delay: delay }
+          : {}),
+      });
       setSaveStatus(saved === false ? "error" : "saved");
     } catch {
       setSaveStatus("error");
@@ -360,6 +370,27 @@ b : Bend
                 placeholder="180"
                 className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all text-sm min-h-[44px]"
               />
+            </div>
+            <div className="space-y-1 col-span-1">
+              <label
+                htmlFor="auto-scroll-delay"
+                className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider"
+              >
+                Auto-scroll delay
+              </label>
+              <select
+                id="auto-scroll-delay"
+                name="auto_scroll_delay"
+                value={formData.auto_scroll_delay}
+                onChange={handleChange}
+                className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all text-sm min-h-[44px]"
+              >
+                {Array.from({ length: MAX_AUTO_SCROLL_DELAY + 1 }, (_, seconds) => (
+                  <option key={seconds} value={seconds}>
+                    {seconds === 0 ? "No delay" : `${seconds} s`}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1 col-span-2 md:col-span-4 xl:col-span-8">
               <label className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">

@@ -24,7 +24,8 @@ service cloud.firestore {
     function validTab(data) {
       return data.keys().hasAll(['title', 'content'])
         && data.keys().hasOnly(['title', 'artist', 'base_key', 'preferred_key',
-          'tuning', 'tags', 'duration', 'content', 'created_at', 'updated_at', 'last_played_at'])
+          'tuning', 'tags', 'duration', 'auto_scroll_delay', 'content',
+          'created_at', 'updated_at', 'last_played_at'])
         && data.title is string && data.title.size() > 0 && data.title.size() <= 200
         && data.content is string && data.content.size() <= 200000
         && optionalString(data, 'artist', 200)
@@ -32,6 +33,8 @@ service cloud.firestore {
         && optionalString(data, 'preferred_key', 20)
         && optionalString(data, 'tuning', 100)
         && (!('tags' in data) || (data.tags is list && data.tags.size() <= 30))
+        && (!('auto_scroll_delay' in data) || (data.auto_scroll_delay is int
+          && data.auto_scroll_delay >= 0 && data.auto_scroll_delay <= 10))
         && validDuration(data) && timestamps(data);
     }
     function validSetlist(data) {
@@ -48,14 +51,6 @@ service cloud.firestore {
     match /users/{uid}/setlists/{setlistId} {
       allow read, delete: if owns(uid);
       allow create, update: if owns(uid) && validSetlist(request.resource.data);
-    }
-    match /users/{uid}/preferences/play {
-      allow get, delete: if owns(uid);
-      allow create, update: if owns(uid)
-        && request.resource.data.keys().hasOnly(['autoScrollDelaySeconds'])
-        && request.resource.data.autoScrollDelaySeconds is int
-        && request.resource.data.autoScrollDelaySeconds >= 0
-        && request.resource.data.autoScrollDelaySeconds <= 10;
     }
   }
 }

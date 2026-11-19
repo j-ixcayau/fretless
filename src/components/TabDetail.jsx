@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
 import {
+  isAutoScrollDelay,
   readChartFontSize,
   saveChartFontSize,
   MIN_CHART_FONT_SIZE,
@@ -26,7 +27,6 @@ import { keepScreenAwake } from "../lib/wakeLock";
 
 export default function TabDetail({
   tab,
-  autoScrollDelay,
   onEdit,
   onDelete,
   onBack,
@@ -365,7 +365,9 @@ export default function TabDetail({
               >
                 <button
                   onClick={() => {
-                    const startState = autoScrollDelay > 0 ? autoScrollDelay : "playing";
+                    const delay = tab.auto_scroll_delay;
+                    const startState =
+                      isAutoScrollDelay(delay) && delay > 0 ? delay : "playing";
                     setScrollState((state) =>
                       state === "idle" ? startState : "idle",
                     );

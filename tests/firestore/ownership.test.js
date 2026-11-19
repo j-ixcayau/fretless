@@ -161,37 +161,21 @@ test("setlist schemas reject malformed and unexpected fields", async () => {
   await assertFails(updateDoc(ref, { name: 1 }));
 });
 
-test("Play preferences accept only the owner's integer delay from 0 to 10", async () => {
-  const path = "users/owner/preferences/play";
-  const owner = userDb("owner");
-  const ref = doc(owner, path);
-  assert.equal((await assertSucceeds(getDoc(ref))).exists(), false);
-  for (const data of [
-    {},
-    { autoScrollDelaySeconds: -1 },
-    { autoScrollDelaySeconds: 11 },
-    { autoScrollDelaySeconds: 0.5 },
-    { autoScrollDelaySeconds: "3" },
-    { autoScrollDelaySeconds: 3, unexpected: true },
-  ]) {
-    await assertFails(setDoc(ref, data));
-  }
-  await assertSucceeds(setDoc(ref, { autoScrollDelaySeconds: 0 }));
-  await assertFails(updateDoc(ref, { autoScrollDelaySeconds: -1 }));
-  await assertSucceeds(updateDoc(ref, { autoScrollDelaySeconds: 10 }));
-  assert.equal((await getDoc(ref)).data().autoScrollDelaySeconds, 10);
+test("a song delay is optional and accepts only whole seconds from 0 to 10", async () => {
+  const db = userDb("owner");
+  const first = doc(db, "users/owner/tabs/first");
+  const second = doc(db, "users/owner/tabs/second");
+  await assertSucceeds(setDoc(first, song()));
+  await assertSucceeds(setDoc(second, { ...song(), auto_scroll_delay: 10 }));
+  assert.equal((await getDoc(first)).data().auto_scroll_delay, undefined);
+  assert.equal((await getDoc(second)).data().auto_scroll_delay, 10);
 
-  for (const db of [
-    env.unauthenticatedContext().firestore(),
-    userDb("other"),
-  ]) {
-    const otherRef = doc(db, path);
-    await assertFails(getDoc(otherRef));
-    await assertFails(updateDoc(otherRef, { autoScrollDelaySeconds: 3 }));
-    await assertFails(deleteDoc(otherRef));
+  for (const delay of [-1, 11, 0.5, "3", null]) {
+    await assertFails(updateDoc(first, { auto_scroll_delay: delay }));
   }
-  await assertSucceeds(deleteDoc(ref));
+  await assertSucceeds(updateDoc(first, { auto_scroll_delay: 0 }));
+  assert.equal((await getDoc(first)).data().auto_scroll_delay, 0);
   await assertFails(
-    setDoc(doc(userDb("other"), path), { autoScrollDelaySeconds: 3 }),
+    updateDoc(doc(userDb("other"), first.path), { auto_scroll_delay: 3 }),
   );
 });

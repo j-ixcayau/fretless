@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   CHART_FONT_SIZE_KEY,
-  DEFAULT_AUTO_SCROLL_DELAY,
   MAX_AUTO_SCROLL_DELAY,
   isAutoScrollDelay,
   readChartFontSize,
@@ -58,7 +57,7 @@ test("blocked storage never prevents reading a chart or changing its size", () =
 
 test("auto-scroll delay accepts zero and whole seconds up to the maximum", () => {
   assert.equal(isAutoScrollDelay(0), true);
-  assert.equal(isAutoScrollDelay(DEFAULT_AUTO_SCROLL_DELAY), true);
+  assert.equal(isAutoScrollDelay(3), true);
   assert.equal(isAutoScrollDelay(MAX_AUTO_SCROLL_DELAY), true);
   for (const invalid of [-1, MAX_AUTO_SCROLL_DELAY + 1, 1.5, "3", null, undefined]) {
     assert.equal(isAutoScrollDelay(invalid), false);

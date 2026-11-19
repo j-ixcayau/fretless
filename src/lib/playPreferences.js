@@ -1,4 +1,3 @@
-export const DEFAULT_AUTO_SCROLL_DELAY = 3;
 export const MAX_AUTO_SCROLL_DELAY = 10;
 
 export function isAutoScrollDelay(value) {

@@ -88,3 +88,23 @@ test("supports editor and AI durations but rejects nonfinite or invalid values",
 test("malformed JSON produces a usable error", () => {
   assert.throws(() => parseSongImport("{"), /Invalid JSON format/);
 });
+
+test("import preserves a song delay and accepts legacy songs without it", () => {
+  const [legacy, immediate, delayed] = parseSongImport(
+    JSON.stringify([
+      song,
+      { ...song, auto_scroll_delay: 0 },
+      { ...song, auto_scroll_delay: 10 },
+    ]),
+  );
+  assert.equal(legacy.auto_scroll_delay, undefined);
+  assert.equal(immediate.auto_scroll_delay, 0);
+  assert.equal(delayed.auto_scroll_delay, 10);
+
+  for (const delay of [-1, 11, 0.5, "3", null]) {
+    assert.throws(
+      () => validateSong({ ...song, auto_scroll_delay: delay }),
+      /Auto-scroll delay/,
+    );
+  }
+});
