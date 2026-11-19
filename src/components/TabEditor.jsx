@@ -383,7 +383,7 @@ b : Bend
                 name="auto_scroll_delay"
                 value={formData.auto_scroll_delay}
                 onChange={handleChange}
-                className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all text-sm min-h-[44px]"
+                className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all appearance-none text-sm min-h-[44px]"
               >
                 {Array.from({ length: MAX_AUTO_SCROLL_DELAY + 1 }, (_, seconds) => (
                   <option key={seconds} value={seconds}>
