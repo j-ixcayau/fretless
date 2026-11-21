@@ -34,7 +34,7 @@ service cloud.firestore {
         && optionalString(data, 'tuning', 100)
         && (!('tags' in data) || (data.tags is list && data.tags.size() <= 30))
         && (!('auto_scroll_delay' in data) || (data.auto_scroll_delay is int
-          && data.auto_scroll_delay >= 0 && data.auto_scroll_delay <= 10))
+          && data.auto_scroll_delay >= 0 && data.auto_scroll_delay <= 300))
         && validDuration(data) && timestamps(data);
     }
     function validSetlist(data) {

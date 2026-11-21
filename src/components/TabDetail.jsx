@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import IconButton from "./ui/IconButton";
 import { useConfirm } from "./ui/ConfirmDialog";
 import {
-  isAutoScrollDelay,
+  getAutoScrollDelay,
   readChartFontSize,
   saveChartFontSize,
   MIN_CHART_FONT_SIZE,
@@ -365,11 +365,12 @@ export default function TabDetail({
               >
                 <button
                   onClick={() => {
-                    const delay = tab.auto_scroll_delay;
-                    const startState =
-                      isAutoScrollDelay(delay) && delay > 0 ? delay : "playing";
+                    const delay = getAutoScrollDelay(
+                      tab.auto_scroll_delay,
+                      playScrollRef.current?.scrollTop,
+                    );
                     setScrollState((state) =>
-                      state === "idle" ? startState : "idle",
+                      state === "idle" ? delay : "idle",
                     );
                   }}
                   aria-label={

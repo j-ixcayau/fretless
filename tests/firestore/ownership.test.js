@@ -161,16 +161,18 @@ test("setlist schemas reject malformed and unexpected fields", async () => {
   await assertFails(updateDoc(ref, { name: 1 }));
 });
 
-test("a song delay is optional and accepts only whole seconds from 0 to 10", async () => {
+test("a song delay is optional and accepts only whole seconds from 0 to 300", async () => {
   const db = userDb("owner");
   const first = doc(db, "users/owner/tabs/first");
   const second = doc(db, "users/owner/tabs/second");
   await assertSucceeds(setDoc(first, song()));
-  await assertSucceeds(setDoc(second, { ...song(), auto_scroll_delay: 10 }));
+  await assertSucceeds(setDoc(second, { ...song(), auto_scroll_delay: 15 }));
   assert.equal((await getDoc(first)).data().auto_scroll_delay, undefined);
-  assert.equal((await getDoc(second)).data().auto_scroll_delay, 10);
+  assert.equal((await getDoc(second)).data().auto_scroll_delay, 15);
+  await assertSucceeds(updateDoc(second, { auto_scroll_delay: 300 }));
+  assert.equal((await getDoc(second)).data().auto_scroll_delay, 300);
 
-  for (const delay of [-1, 11, 0.5, "3", null]) {
+  for (const delay of [-1, 301, 0.5, "3", null]) {
     await assertFails(updateDoc(first, { auto_scroll_delay: delay }));
   }
   await assertSucceeds(updateDoc(first, { auto_scroll_delay: 0 }));

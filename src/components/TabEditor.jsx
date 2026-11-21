@@ -12,7 +12,11 @@ import {
 import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
 import { renderChart } from "../lib/chart";
-import { MAX_AUTO_SCROLL_DELAY } from "../lib/playPreferences";
+import {
+  DEFAULT_AUTO_SCROLL_DELAY,
+  isAutoScrollDelay,
+  MAX_AUTO_SCROLL_DELAY,
+} from "../lib/playPreferences";
 
 // Textarea with a synced highlight layer behind it so "--- comment" lines are
 // coloured while editing. The textarea sits on top with transparent text; the
@@ -70,7 +74,7 @@ function tabToFormData(tab) {
     tuning: tab?.tuning || "Standard",
     tags: tab?.tags ? tab.tags.join(", ") : "",
     duration: tab?.duration || "",
-    auto_scroll_delay: tab?.auto_scroll_delay ?? 0,
+    auto_scroll_delay: tab?.auto_scroll_delay || "",
     content: tab?.content || "",
   };
 }
@@ -82,6 +86,7 @@ export default function TabEditor({ tab, onSave, onCancel }) {
   const [viewMode, setViewMode] = useState("edit"); // 'edit', 'split', 'preview'
   const [saveStatus, setSaveStatus] = useState("idle");
   const saving = useRef(false);
+  const delayInput = useRef(null);
 
   // Tracks whether formData has been populated from real tab data yet, so we
   // don't clobber in-progress edits once the initial sync has happened.
@@ -116,6 +121,13 @@ export default function TabEditor({ tab, onSave, onCancel }) {
 
   const handleSave = async () => {
     if (saving.current) return;
+    if (delayInput.current && !delayInput.current.reportValidity()) return;
+    const { auto_scroll_delay, ...fields } = formData;
+    const delay = Number(auto_scroll_delay);
+    if (!isAutoScrollDelay(delay)) {
+      setSaveStatus("invalidDelay");
+      return;
+    }
     saving.current = true;
     setSaveStatus("saving");
     const tagsArray = formData.tags
@@ -123,8 +135,6 @@ export default function TabEditor({ tab, onSave, onCancel }) {
       .map((t) => t.trim())
       .filter(Boolean);
     try {
-      const { auto_scroll_delay, ...fields } = formData;
-      const delay = Number(auto_scroll_delay);
       const saved = await onSave({
         ...fields,
         tags: tagsArray,
@@ -182,6 +192,7 @@ b : Bend
                   saving: "Saving…",
                   saved: "Saved",
                   error: "Save failed",
+                  invalidDelay: `Use a whole delay from 0 to ${MAX_AUTO_SCROLL_DELAY} seconds`,
                 }[saveStatus]
               }
             </span>
@@ -376,21 +387,25 @@ b : Bend
                 htmlFor="auto-scroll-delay"
                 className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider"
               >
-                Auto-scroll delay
+                Auto-scroll delay (s)
               </label>
-              <select
+              <input
+                ref={delayInput}
                 id="auto-scroll-delay"
+                aria-describedby="auto-scroll-delay-help"
                 name="auto_scroll_delay"
+                type="number"
+                min={0}
+                max={MAX_AUTO_SCROLL_DELAY}
+                step={1}
+                placeholder={`Default: ${DEFAULT_AUTO_SCROLL_DELAY} s`}
                 value={formData.auto_scroll_delay}
                 onChange={handleChange}
-                className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all appearance-none text-sm min-h-[44px]"
-              >
-                {Array.from({ length: MAX_AUTO_SCROLL_DELAY + 1 }, (_, seconds) => (
-                  <option key={seconds} value={seconds}>
-                    {seconds === 0 ? "No delay" : `${seconds} s`}
-                  </option>
-                ))}
-              </select>
+                className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all text-sm min-h-[44px]"
+              />
+              <p id="auto-scroll-delay-help" className="text-xs text-muted-foreground">
+                From the top only. Blank or 0 uses {DEFAULT_AUTO_SCROLL_DELAY} s.
+              </p>
             </div>
             <div className="space-y-1 col-span-2 md:col-span-4 xl:col-span-8">
               <label className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">

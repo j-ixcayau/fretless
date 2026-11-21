@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   CHART_FONT_SIZE_KEY,
   MAX_AUTO_SCROLL_DELAY,
+  getAutoScrollDelay,
   isAutoScrollDelay,
   readChartFontSize,
   saveChartFontSize,
@@ -62,4 +63,13 @@ test("auto-scroll delay accepts zero and whole seconds up to the maximum", () =>
   for (const invalid of [-1, MAX_AUTO_SCROLL_DELAY + 1, 1.5, "3", null, undefined]) {
     assert.equal(isAutoScrollDelay(invalid), false);
   }
+});
+
+
+test("custom auto-scroll delay applies only at the top of the chart", () => {
+  assert.equal(getAutoScrollDelay(15, 0), 15);
+  assert.equal(getAutoScrollDelay(15, 250), 3);
+  assert.equal(getAutoScrollDelay(undefined, 0), 3);
+  assert.equal(getAutoScrollDelay(0, 0), 3);
+  assert.equal(getAutoScrollDelay(301, 0), 3);
 });
